@@ -14,6 +14,7 @@ export interface Product {
     categoryId: string;
     stock: number;
     inStock: boolean;
+    isArchived?: boolean;
     createdAt: number; // Timestamp
 }
 

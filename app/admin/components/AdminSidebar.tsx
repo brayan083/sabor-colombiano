@@ -14,8 +14,10 @@ const AdminSidebar: React.FC = () => {
         <aside className="w-64 shrink-0 bg-white border-r border-gray-200 p-4 flex flex-col justify-between h-full">
             <div className="flex flex-col gap-8">
                 <div className="flex items-center gap-2 px-2">
-                    <span className="material-symbols-outlined text-primary-admin text-3xl">restaurant_menu</span>
-                    <h1 className="text-slate-900 text-xl font-bold">ColFood</h1>
+                    <div className="relative size-8">
+                        <img src="/img/logo2.png" alt="Empalombia" className="object-contain w-full h-full" />
+                    </div>
+                    <h1 className="text-slate-900 text-xl font-bold">Empalombia</h1>
                 </div>
                 {/* ... links unchanged ... */}
                 <div className="flex flex-col gap-4">
@@ -40,6 +42,13 @@ const AdminSidebar: React.FC = () => {
                         >
                             <span className="material-symbols-outlined">inventory_2</span>
                             <p className="text-sm font-medium leading-normal">Productos</p>
+                        </Link>
+                        <Link 
+                            href="/admin/stock" 
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin/stock') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
+                        >
+                            <span className="material-symbols-outlined">inventory</span>
+                            <p className="text-sm font-medium leading-normal">Inventario</p>
                         </Link>
                         <Link 
                             href="/admin/categories" 

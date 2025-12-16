@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createProduct } from '@/lib/services/products';
+import { uploadImage } from '@/lib/services/upload';
 import { getCategories } from '@/lib/services/categories';
 import { Category } from '@/types';
 
@@ -11,6 +12,8 @@ const NewProductPage: React.FC = () => {
     const router = useRouter();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -42,18 +45,37 @@ const NewProductPage: React.FC = () => {
         setFormData(prev => ({ ...prev, [name]: checked }));
     };
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreview(previewUrl);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
+            let imageUrl = formData.image;
+
+            if (imageFile) {
+                imageUrl = await uploadImage(imageFile, "products");
+            } else if (!imageUrl) {
+                // Validate if image is required and no URL or File provided
+                // For now, let's assume one must be provided or it's optional? 
+                // DB Schema usually expects a string.
+            }
+
             await createProduct({
                 name: formData.name,
                 description: formData.description,
                 price: parseFloat(formData.price),
                 stock: parseInt(formData.stock),
                 categoryId: formData.categoryId,
-                image: formData.image,
+                image: imageUrl,
                 inStock: formData.inStock,
                 createdAt: Date.now()
             });
@@ -149,17 +171,41 @@ const NewProductPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-900">URL de la Imagen</label>
-                        <input 
+                        <label className="text-sm font-medium text-slate-900">Imagen del Producto</label>
+                        
+                        {/* URL Option (optional fallback) */}
+                        {/* <input 
                             type="url" 
                             name="image" 
                             value={formData.image} 
                             onChange={handleChange} 
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
-                            placeholder="https://..."
-                        />
-                         <p className="text-xs text-slate-500">Por ahora usa una URL externa.</p>
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 text-sm"
+                            placeholder="O pega una URL externa..."
+                        /> */}
+
+                        <div className="flex flex-col gap-4">
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="block w-full text-sm text-slate-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-lg file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-primary-admin/10 file:text-primary-admin
+                                hover:file:bg-primary-admin/20"
+                            />
+                            
+                            {(imagePreview || formData.image) && (
+                                <div className="relative h-48 w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                                    <img 
+                                        src={imagePreview || formData.image} 
+                                        alt="Vista previa" 
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -171,7 +217,7 @@ const NewProductPage: React.FC = () => {
                             onChange={handleCheckboxChange} 
                             className="h-4 w-4 rounded border-gray-300 text-primary-admin focus:ring-primary-admin"
                         />
-                        <label htmlFor="inStock" className="text-sm font-medium text-slate-900">Producto Activo / Disponible</label>
+                        <label htmlFor="inStock" className="text-sm font-medium text-slate-900">Disponible</label>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

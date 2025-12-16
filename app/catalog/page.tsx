@@ -96,29 +96,51 @@ const Catalog: React.FC = () => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                            {filteredProducts.map((prod) => (
-                                <div key={prod.id} className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-sm hover:shadow-lg transition-shadow duration-300">
-                                    <Link href={`/product/${prod.id}`} className="block overflow-hidden rounded-xl bg-gray-200">
-                                        <div className="relative aspect-[4/3] w-full">
-                                            <Image
-                                                fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                src={prod.image}
-                                                alt={prod.name}
-                                            />
+                            {filteredProducts.map((prod) => {
+                                const isOutOfStock = prod.stock <= 0 || prod.inStock === false;
+                                return (
+                                    <div key={prod.id} className={`group flex flex-col overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 ${isOutOfStock ? 'opacity-75 grayscale' : 'hover:shadow-lg'}`}>
+                                        <div className="relative">
+                                            <Link href={`/product/${prod.id}`} className={`block overflow-hidden rounded-xl bg-gray-200 ${isOutOfStock ? 'pointer-events-none' : ''}`}>
+                                                <div className="relative aspect-[4/3] w-full">
+                                                    <Image
+                                                        fill
+                                                        className={`object-cover transition-transform duration-500 ${!isOutOfStock && 'group-hover:scale-110'}`}
+                                                        src={prod.image}
+                                                        alt={prod.name}
+                                                    />
+                                                </div>
+                                            </Link>
+                                            {isOutOfStock && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl pointer-events-none z-10">
+                                                    <span className="bg-red-600 text-white font-bold py-1 px-3 rounded-lg text-sm shadow-md">
+                                                        SIN STOCK
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
-                                    </Link>
-                                    <div className="flex flex-1 flex-col p-4">
-                                        <Link href={`/product/${prod.id}`} className="block">
-                                            <h4 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">{prod.name}</h4>
-                                            <p className="mt-2 text-xl font-black text-primary">${prod.price}</p>
-                                        </Link>
-                                        <div className="mt-4">
-                                            <AddToCart product={prod} />
+                                        
+                                        <div className="flex flex-1 flex-col p-4">
+                                            <Link href={`/product/${prod.id}`} className={`block ${isOutOfStock ? 'pointer-events-none' : ''}`}>
+                                                <h4 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">{prod.name}</h4>
+                                                <p className="mt-2 text-xl font-black text-primary">${prod.price}</p>
+                                            </Link>
+                                            <div className="mt-4">
+                                                {isOutOfStock ? (
+                                                    <button 
+                                                        disabled
+                                                        className="w-full py-2 bg-gray-100 text-gray-400 font-bold rounded-lg cursor-not-allowed border border-gray-200"
+                                                    >
+                                                        Agotado
+                                                    </button>
+                                                ) : (
+                                                    <AddToCart product={prod} />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {filteredProducts.length === 0 && (
                                 <div className="col-span-full text-center py-10">
                                     <p className="text-slate-500">No se encontraron productos en esta categoría.</p>

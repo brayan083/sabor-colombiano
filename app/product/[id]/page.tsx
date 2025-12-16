@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     return {
-        title: `${product.name} - Sabor Colombiano`,
+        title: `${product.name} - Empalombia`,
         description: product.description,
     };
 }

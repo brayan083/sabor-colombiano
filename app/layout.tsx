@@ -6,8 +6,11 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { CartProvider } from "@/lib/context/CartContext";
 
 export const metadata: Metadata = {
-  title: "Sabor Colombiano",
+  title: "Empalombia",
   description: "Auténtico sabor colombiano",
+  icons: {
+    icon: '/img/logo2.png',
+  },
 };
 
 export default function RootLayout({

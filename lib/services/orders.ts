@@ -8,7 +8,8 @@ import {
     updateDoc,
     query,
     orderBy,
-    where
+    where,
+    runTransaction
 } from "firebase/firestore";
 import { Order } from "@/types";
 
@@ -46,8 +47,32 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
 
 export const createOrder = async (order: Omit<Order, "id">): Promise<string> => {
     try {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), order);
-        return docRef.id;
+        return await runTransaction(db, async (transaction) => {
+            // 1. Verify and reserve stock for all items
+            for (const item of order.items) {
+                const productRef = doc(db, "products", item.productId);
+                const productSnap = await transaction.get(productRef);
+
+                if (!productSnap.exists()) {
+                    throw new Error(`Producto no encontrado: ${item.name}`);
+                }
+
+                const productData = productSnap.data();
+                const newStock = productData.stock - item.quantity;
+
+                if (newStock < 0) {
+                    throw new Error(`Stock insuficiente para ${item.name}. Disponible: ${productData.stock}`);
+                }
+
+                transaction.update(productRef, { stock: newStock });
+            }
+
+            // 2. Create the order
+            const newOrderRef = doc(collection(db, COLLECTION_NAME));
+            transaction.set(newOrderRef, order);
+
+            return newOrderRef.id;
+        });
     } catch (error) {
         console.error("Error creating order:", error);
         throw error;

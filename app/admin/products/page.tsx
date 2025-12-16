@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getProducts, deleteProduct } from '@/lib/services/products';
+import { getAllProducts, deleteProduct, toggleProductArchive } from '@/lib/services/products';
 import { getCategories } from '@/lib/services/categories';
 import { Product, Category } from '@/types';
 
@@ -16,7 +16,7 @@ const AdminProducts: React.FC = () => {
         setLoading(true);
         try {
             const [productsData, categoriesData] = await Promise.all([
-                getProducts(),
+                getAllProducts(),
                 getCategories()
             ]);
             setProducts(productsData);
@@ -32,17 +32,26 @@ const AdminProducts: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleDelete = async (id: string) => {
-        if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+    const handleArchive = async (id: string, currentStatus: boolean | undefined) => {
+        const isArchived = !!currentStatus;
+        const action = isArchived ? 'restaurar' : 'archivar';
+        
+        if (confirm(`¿Estás seguro de que deseas ${action} este producto?`)) {
             try {
-                await deleteProduct(id);
-                // Refresh data/Optimistic update
-                setProducts(products.filter(p => p.id !== id));
+                await toggleProductArchive(id, !isArchived);
+                // Optimistic update
+                setProducts(products.map(p => 
+                    p.id === id ? { ...p, isArchived: !isArchived } : p
+                ));
             } catch (error) {
-                alert('Error al eliminar producto');
+                alert(`Error al ${action} producto`);
             }
         }
     };
+    
+    // Keeping hard delete just in case, but hidden or renamed? 
+    // For now, replacing the main delete action with archive.
+
 
     // Helper to get category name
     const getCategoryName = (catId: string) => {
@@ -103,7 +112,7 @@ const AdminProducts: React.FC = () => {
                                     <td colSpan={6} className="px-6 py-4 text-center">No hay productos encontrados.</td>
                                 </tr>
                             ) : products.map((product) => (
-                                <tr key={product.id} className="bg-white border-b hover:bg-gray-50">
+                                <tr key={product.id} className={`bg-white border-b hover:bg-gray-50 ${product.isArchived ? 'bg-gray-50/80 grayscale-[0.8] opacity-75' : ''}`}>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
                                             <div className="relative h-12 w-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
@@ -133,7 +142,7 @@ const AdminProducts: React.FC = () => {
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                             product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                         }`}>
-                                            {product.inStock ? 'Activo' : 'Inactivo'}
+                                            {product.isArchived ? 'Archivado' : (product.inStock ? 'En Stock' : 'Sin Stock')}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -141,8 +150,14 @@ const AdminProducts: React.FC = () => {
                                             <Link href={`/admin/products/${product.id}`} className="text-slate-400 hover:text-primary-admin" title="Editar">
                                                 <span className="material-symbols-outlined text-[20px]">edit</span>
                                             </Link>
-                                            <button onClick={() => handleDelete(product.id)} className="text-slate-400 hover:text-red-600" title="Eliminar">
-                                                <span className="material-symbols-outlined text-[20px]">delete</span>
+                                            <button 
+                                                onClick={() => handleArchive(product.id, product.isArchived)} 
+                                                className={`hover:text-primary-admin ${product.isArchived ? 'text-green-600' : 'text-slate-400 hover:text-red-600'}`} 
+                                                title={product.isArchived ? "Restaurar" : "Archivar"}
+                                            >
+                                                <span className="material-symbols-outlined text-[20px]">
+                                                    {product.isArchived ? 'restore_from_trash' : 'delete'}
+                                                </span>
                                             </button>
                                         </div>
                                     </td>

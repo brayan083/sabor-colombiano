@@ -53,7 +53,7 @@ const LoginPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
             <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-black text-slate-900 mb-2">ColFood Admin</h1>
+                    <h1 className="text-3xl font-black text-slate-900 mb-2">Empalombia Admin</h1>
                     <p className="text-slate-500">Inicia sesión para gestionar tu restaurante</p>
                 </div>
 
@@ -72,7 +72,7 @@ const LoginPage: React.FC = () => {
                             onChange={(e) => setEmail(e.target.value)} 
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
-                            placeholder="admin@colfood.com"
+                            placeholder="admin@empalombia.com"
                         />
                     </div>
                     <div className="space-y-2">

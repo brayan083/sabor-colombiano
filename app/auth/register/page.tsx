@@ -65,7 +65,7 @@ const RegisterPage: React.FC = () => {
             <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-black text-slate-900 mb-2">Crear Cuenta</h1>
-                    <p className="text-slate-500">Regístrate para gestionar Sabor Colombiano</p>
+                    <p className="text-slate-500">Regístrate para gestionar Empalombia</p>
                 </div>
 
                 {error && (

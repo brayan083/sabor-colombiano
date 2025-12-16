@@ -6,7 +6,7 @@ import { getProducts } from '@/lib/services/products';
 import { getCategories } from '@/lib/services/categories';
 
 export const metadata: Metadata = {
-  title: 'Sabor Colombiano - Inicio',
+  title: 'Empalombia - Inicio',
   description: 'Comida colombiana auténtica',
 };
 
@@ -29,7 +29,7 @@ const Home = async () => {
                         <div className="absolute inset-0 bg-black/40"></div>
                         <div className="absolute inset-0 bg-[url('https://lh3.googleusercontent.com/aida-public/AB6AXuBDytjv9nAH4WH7NmrSNoc1S-LVI9whOT5mOohSP3RjfZ6VKUl1EjxXrcMMqCd3LrUCIX9B-Ja-7r3cxcu6LY7OWeDjGoGu8ocXrdbiAS_7eecDeZXvnFe0CKcVNGL-uP9qyWS39VFFYxMsIx-onFcuMo16Ox5RwOzA2oKQX8xitgqjYmSPJte45wtqyTWCjhsHvZxXC1Jmvb7SDFLXDqEtKPwXcaKwpVJ2qL355vQMRd6mTwI-5W-54w2zrC9flfDW9Njnv7TrFVM')] bg-cover bg-center -z-10"></div>
                         <div className="flex flex-col gap-2 text-center max-w-2xl z-10">
-                            <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] sm:text-5xl">El Sabor de Colombia, Directo a tu Mesa</h1>
+                            <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] sm:text-5xl">El Sabor de Empalombia, Directo a tu Mesa</h1>
                             <h2 className="text-white text-sm font-normal leading-normal sm:text-base">Descubre la auténtica comida colombiana preparada con amor y los ingredientes más frescos.</h2>
                         </div>
                         <Link href="/catalog" className="z-10 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 sm:h-12 sm:px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] sm:text-base hover:opacity-90">

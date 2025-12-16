@@ -5,7 +5,7 @@ const Footer: React.FC = () => {
         <footer className="bg-black/5 py-12 px-4 sm:px-10 lg:px-20 mt-auto">
             <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div className="md:col-span-2">
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">Sabor Colombiano</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">Empalombia</h3>
                     <p className="text-sm text-slate-600">Llevando el auténtico sabor de Colombia a tu hogar con ingredientes frescos y recetas tradicionales.</p>
                 </div>
                 <div>
@@ -21,12 +21,12 @@ const Footer: React.FC = () => {
                     <ul className="space-y-2 text-sm text-slate-600">
                         <li>Calle Falsa 123, Bogotá</li>
                         <li>(555) 123-4567</li>
-                        <li>contacto@saborcolombiano.com</li>
+                        <li>contacto@empalombia.com</li>
                     </ul>
                 </div>
             </div>
             <div className="mt-8 pt-8 border-t border-black/10 text-center text-sm text-slate-500">
-                <p>© 2024 Sabor Colombiano. Todos los derechos reservados.</p>
+                <p>© 2024 Empalombia. Todos los derechos reservados.</p>
             </div>
         </footer>
     );

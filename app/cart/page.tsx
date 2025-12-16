@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/lib/context/CartContext';
+import RecommendedProducts from '@/components/RecommendedProducts';
+import { formatPrice } from '@/lib/utils';
 
 export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
@@ -75,7 +77,7 @@ export default function CartPage() {
                                     </div>
                                     
                                     <p className="text-lg font-bold text-primary">
-                                        ${(item.price * item.quantity).toLocaleString()}
+                                        {formatPrice(item.price * item.quantity)}
                                     </p>
                                 </div>
                             </div>
@@ -98,7 +100,7 @@ export default function CartPage() {
                         <div className="space-y-3 mb-6">
                             <div className="flex justify-between text-slate-600">
                                 <span>Subtotal</span>
-                                <span>${totalPrice.toLocaleString()}</span>
+                                <span>{formatPrice(totalPrice)}</span>
                             </div>
                             {/* <div className="flex justify-between text-slate-600">
                                 <span>Envío</span>
@@ -109,7 +111,7 @@ export default function CartPage() {
                         <div className="border-t border-gray-200 pt-4 mb-8">
                             <div className="flex justify-between items-center text-lg font-bold text-slate-900">
                                 <span>Total</span>
-                                <span>${totalPrice.toLocaleString()}</span>
+                                <span>{formatPrice(totalPrice)}</span>
                             </div>
                         </div>
                         
@@ -129,6 +131,8 @@ export default function CartPage() {
                     </div>
                 </div>
             </div>
+            
+            <RecommendedProducts />
         </div>
     );
 }

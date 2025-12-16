@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Iniciar Sesión - Sabor Colombiano',
+  title: 'Iniciar Sesión - Empalombia',
   description: 'Accede a tu cuenta',
 };
 
@@ -24,12 +24,10 @@ const Login: React.FC = () => {
                         </div>
                         <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16">
                             <Link href="/" className="flex items-center gap-4 mb-8">
-                                <div className="size-8 text-primary-admin">
-                                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
-                                    </svg>
+                                <div className="relative size-10">
+                                    <Image src="/img/logo2.png" fill alt="Empalombia" className="object-contain" />
                                 </div>
-                                <h2 className="text-slate-900 text-xl font-bold leading-tight tracking-[-0.015em]">Sabor Colombiano</h2>
+                                <h2 className="text-slate-900 text-xl font-bold leading-tight tracking-[-0.015em]">Empalombia</h2>
                             </Link>
                             <h1 className="text-slate-900 tracking-tight text-[32px] font-bold leading-tight pb-2">Iniciar Sesión</h1>
                             <p className="text-slate-500 text-base font-normal leading-normal mb-8">Bienvenido de nuevo, por favor ingresa tus datos.</p>
