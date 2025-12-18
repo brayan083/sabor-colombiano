@@ -35,8 +35,7 @@ yarn-error.log*
 next-env.d.ts
 
 .firebaserc
-firebase.json
 
 apphosting.yaml
 
-package-lock.json
+
