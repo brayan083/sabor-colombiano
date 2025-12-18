@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { syncUser } from '@/lib/services/users';
@@ -9,6 +9,9 @@ import Link from 'next/link';
 
 const RegisterPage: React.FC = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || '/';
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -47,7 +50,7 @@ const RegisterPage: React.FC = () => {
             // 3. Sync with Firestore (create user document)
             await syncUser(user, { phoneNumber, termsAccepted });
 
-            router.push('/');
+            router.push(redirectUrl);
         } catch (err: any) {
              console.error("Registration error:", err);
              if (err.code === 'auth/email-already-in-use') {

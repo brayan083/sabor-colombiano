@@ -38,6 +38,13 @@ export default function CheckoutPage() {
         }
     }, [cart, authLoading, user, router]);
 
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/auth/login?redirect=/checkout');
+        }
+    }, [authLoading, user, router]);
+
     // Auto-fill user data if available (recreating this as it might have been lost)
     useEffect(() => {
         if (user) {
@@ -85,6 +92,33 @@ export default function CheckoutPage() {
         setErrorMessage(null);
 
         try {
+            // ... (construct order object logic same as before) ...
+            
+            if (formData.paymentMethod === 'mercado_pago') {
+                // Call API to create preference
+                const response = await fetch('/api/payments/mercadopago', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart,
+                        payer: {
+                            ...formData,
+                            email: user.email,
+                            id: user.uid
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.init_point) {
+                    window.location.href = data.init_point;
+                    return; // Stop execution to allow redirect
+                } else {
+                    throw new Error('No se pudo iniciar el pago con Mercado Pago');
+                }
+            }
+            
+            // Standard order creation (Cash/Transfer)
             const orderItems: OrderItem[] = cart.map(item => ({
                 productId: item.id,
                 name: item.name,

@@ -7,6 +7,7 @@ import { getProductById, updateProduct } from '@/lib/services/products';
 import { uploadImage } from '@/lib/services/upload';
 import { getCategories } from '@/lib/services/categories';
 import { Category, Product } from '@/types';
+import Image from 'next/image';
 
 const EditProductPage: React.FC = () => {
     const router = useRouter();
@@ -126,22 +127,22 @@ const EditProductPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-900">Nombre del Producto</label>
-                            <input 
-                                type="text" 
-                                name="name" 
-                                value={formData.name} 
-                                onChange={handleChange} 
+                            <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                             />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-900">Precio</label>
-                            <input 
-                                type="number" 
-                                name="price" 
-                                value={formData.price} 
-                                onChange={handleChange} 
+                            <input
+                                type="number"
+                                name="price"
+                                value={formData.price}
+                                onChange={handleChange}
                                 required
                                 step="0.01"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
@@ -151,10 +152,10 @@ const EditProductPage: React.FC = () => {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Descripción</label>
-                        <textarea 
-                            name="description" 
-                            value={formData.description} 
-                            onChange={handleChange} 
+                        <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
                             required
                             rows={3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin resize-none"
@@ -162,12 +163,12 @@ const EditProductPage: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <div className="space-y-2">
+                        <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-900">Categoría</label>
-                            <select 
-                                name="categoryId" 
-                                value={formData.categoryId} 
-                                onChange={handleChange} 
+                            <select
+                                name="categoryId"
+                                value={formData.categoryId}
+                                onChange={handleChange}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin bg-white"
                             >
@@ -179,11 +180,11 @@ const EditProductPage: React.FC = () => {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-900">Stock</label>
-                            <input 
-                                type="number" 
-                                name="stock" 
-                                value={formData.stock} 
-                                onChange={handleChange} 
+                            <input
+                                type="number"
+                                name="stock"
+                                value={formData.stock}
+                                onChange={handleChange}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                             />
@@ -192,10 +193,10 @@ const EditProductPage: React.FC = () => {
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Imagen del Producto</label>
-                        
+
                         <div className="flex flex-col gap-4">
-                            <input 
-                                type="file" 
+                            <input
+                                type="file"
                                 accept="image/*"
                                 onChange={handleImageChange}
                                 className="block w-full text-sm text-slate-500
@@ -205,13 +206,14 @@ const EditProductPage: React.FC = () => {
                                 file:bg-primary-admin/10 file:text-primary-admin
                                 hover:file:bg-primary-admin/20"
                             />
-                            
+
                             {(imagePreview || formData.image) && (
                                 <div className="relative h-48 w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-                                    <img 
-                                        src={imagePreview || formData.image} 
-                                        alt="Vista previa" 
-                                        className="h-full w-full object-cover"
+                                    <Image
+                                        src={imagePreview || formData.image}
+                                        alt="Vista previa"
+                                        fill
+                                        className="object-cover"
                                     />
                                 </div>
                             )}
@@ -219,12 +221,12 @@ const EditProductPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <input 
-                            type="checkbox" 
-                            name="inStock" 
+                        <input
+                            type="checkbox"
+                            name="inStock"
                             id="inStock"
-                            checked={formData.inStock} 
-                            onChange={handleCheckboxChange} 
+                            checked={formData.inStock}
+                            onChange={handleCheckboxChange}
                             className="h-4 w-4 rounded border-gray-300 text-primary-admin focus:ring-primary-admin"
                         />
                         <label htmlFor="inStock" className="text-sm font-medium text-slate-900">Disponible</label>
@@ -234,8 +236,8 @@ const EditProductPage: React.FC = () => {
                         <Link href="/admin/products" className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-slate-700 font-medium hover:bg-gray-50">
                             Cancelar
                         </Link>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             disabled={loading}
                             className="px-6 py-2 bg-primary-admin text-white rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50"
                         >

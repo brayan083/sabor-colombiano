@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { syncUser } from '@/lib/services/users';
@@ -10,6 +10,9 @@ import Link from 'next/link';
 
 const LoginPage: React.FC = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || '/';
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -23,7 +26,7 @@ const LoginPage: React.FC = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             await syncUser(userCredential.user);
-            router.push('/');
+            router.push(redirectUrl);
         } catch (err: any) {
              console.error("Login error:", err);
              setError('Credenciales inválidas o error de conexión.');
@@ -40,7 +43,7 @@ const LoginPage: React.FC = () => {
         try {
             const result = await signInWithPopup(auth, provider);
             await syncUser(result.user);
-            router.push('/');
+            router.push(redirectUrl);
         } catch (err: any) {
              console.error("Google login error:", err);
              setError('Error al iniciar sesión con Google.');

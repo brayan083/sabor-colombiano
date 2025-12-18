@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
@@ -40,7 +41,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center">
                     <Link href="/" className="flex items-center gap-3 text-slate-900 hover:opacity-80 transition-opacity">
                         <div className="relative size-14">
-                            <img src="/img/logo2.png" alt="Empalombia Logo" className="object-contain w-full h-full" />
+                            <Image src="/img/logo2.png" alt="Empalombia Logo" fill className="object-contain" priority sizes="56px" />
                         </div>
                         <h2 className="hidden sm:block text-xl font-bold leading-tight tracking-tight text-slate-900">Empalombia</h2>
                     </Link>
@@ -60,7 +61,7 @@ const Header: React.FC = () => {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-4">
-                     {loading ? (
+                    {loading ? (
                         <div className="flex items-center gap-2 animate-pulse">
                             <div className="hidden md:flex flex-col items-end mr-2 gap-1">
                                 <div className="h-3 w-20 bg-slate-200 rounded"></div>
@@ -68,25 +69,25 @@ const Header: React.FC = () => {
                             </div>
                             <div className="size-10 rounded-full bg-slate-200"></div>
                         </div>
-                     ) : user ? (
+                    ) : user ? (
                         <div className="relative">
-                            <button 
+                            <button
                                 id="user-menu-button"
                                 onClick={toggleDropdown}
                                 className="flex items-center gap-2 p-1 rounded-full hover:bg-black/5 transition-colors group"
                             >
                                 <div className="flex items-center justify-center size-9 rounded-full bg-gray-100 overflow-hidden border border-gray-200 group-hover:border-primary/50 transition-colors">
-                                   {user.photoURL ? (
-                                        <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-                                   ) : (
+                                    {user.photoURL ? (
+                                        <Image src={user.photoURL} alt="Avatar" width={36} height={36} className="object-cover" />
+                                    ) : (
                                         <span className="material-symbols-outlined text-slate-600 text-[20px]">person</span>
-                                   )}
+                                    )}
                                 </div>
                                 <span className="material-symbols-outlined text-slate-500 text-sm group-hover:text-slate-800 transition-colors">expand_more</span>
                             </button>
 
                             {isDropdownOpen && (
-                                <div 
+                                <div
                                     id="user-menu-dropdown"
                                     className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ring-1 ring-black/5"
                                 >
@@ -107,11 +108,11 @@ const Header: React.FC = () => {
                                         </Link>
                                     </div>
                                     <div className="border-t border-gray-100 pt-1 mt-1">
-                                        <button 
+                                        <button
                                             onClick={async () => {
                                                 await signOut();
                                                 setIsDropdownOpen(false);
-                                            }} 
+                                            }}
                                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left transition-colors"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">logout</span>

@@ -48,26 +48,32 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
 export const createOrder = async (order: Omit<Order, "id">): Promise<string> => {
     try {
         return await runTransaction(db, async (transaction) => {
-            // 1. Verify and reserve stock for all items
+            const productDocs = [];
+
+            // 1. Reads: Fetch all product data first
             for (const item of order.items) {
                 const productRef = doc(db, "products", item.productId);
                 const productSnap = await transaction.get(productRef);
+                productDocs.push({ item, ref: productRef, snap: productSnap });
+            }
 
-                if (!productSnap.exists()) {
+            // 2. Writes: Verify stock and update
+            for (const { item, ref, snap } of productDocs) {
+                if (!snap.exists()) {
                     throw new Error(`Producto no encontrado: ${item.name}`);
                 }
 
-                const productData = productSnap.data();
+                const productData = snap.data();
                 const newStock = productData.stock - item.quantity;
 
                 if (newStock < 0) {
                     throw new Error(`Stock insuficiente para ${item.name}. Disponible: ${productData.stock}`);
                 }
 
-                transaction.update(productRef, { stock: newStock });
+                transaction.update(ref, { stock: newStock });
             }
 
-            // 2. Create the order
+            // 3. Create the order
             const newOrderRef = doc(collection(db, COLLECTION_NAME));
             transaction.set(newOrderRef, order);
 

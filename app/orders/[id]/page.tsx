@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getOrderById } from '@/lib/services/orders';
 import { Order } from '@/types';
+import Image from 'next/image';
 
 export default function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     // Unwrapping params using React.use for Next.js 15+ compatibility
     const { id } = use(params);
-    
+
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [order, setOrder] = useState<Order | null>(null);
@@ -67,7 +68,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
             default: return method;
         }
     };
-    
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'paid':
@@ -99,8 +100,8 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
     if (!order) {
         return (
             <div className="min-h-[50vh] flex flex-col items-center justify-center p-4">
-               <p className="text-slate-500 mb-4">No se encontró el pedido.</p>
-               <Link href="/orders" className="text-primary font-bold hover:underline">Volver a Mis Pedidos</Link>
+                <p className="text-slate-500 mb-4">No se encontró el pedido.</p>
+                <Link href="/orders" className="text-primary font-bold hover:underline">Volver a Mis Pedidos</Link>
             </div>
         );
     }
@@ -124,7 +125,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                         {translateStatus(order.status)}
                     </div>
                 </div>
-                
+
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                         <div>
@@ -137,7 +138,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                             <span className="block text-sm text-slate-400">{order.customerPhone}</span>
                         </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                         <div>
                             <span className="block text-sm text-slate-500">Método de Pago</span>
@@ -169,8 +170,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                             <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors p-2 rounded">
                                 <div className="flex items-center gap-4">
                                     <div className="size-12 bg-gray-100 rounded-md overflow-hidden relative">
-                                        {/* Ideally use Next Image here if item.image is available */}
-                                        <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
+                                        <Image src={item.image} alt={item.name} fill className="object-cover" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-slate-900 text-sm">{item.name}</p>
@@ -182,19 +182,19 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                         ))}
                     </div>
                 </div>
-                
+
                 <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
                     <span className="font-bold text-lg text-slate-700">Total Pagado</span>
                     <span className="font-black text-2xl text-primary">${order.total.toLocaleString()}</span>
                 </div>
             </div>
-            
-             {order.paymentMethod === 'transfer' && (
+
+            {order.paymentMethod === 'transfer' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
                     <span className="material-symbols-outlined text-blue-600">info</span>
                     <div>
                         <p className="font-bold text-blue-900 text-sm">Recuerda enviar tu comprobante</p>
-                        <p className="text-sm text-blue-800 mt-1">Si pagaste por transferencia, envía el comprobante al WhatsApp +57 300 123 4567 indicando tu número de pedido #{order.id.slice(0,6)}.</p>
+                        <p className="text-sm text-blue-800 mt-1">Si pagaste por transferencia, envía el comprobante al WhatsApp +57 300 123 4567 indicando tu número de pedido #{order.id.slice(0, 6)}.</p>
                     </div>
                 </div>
             )}

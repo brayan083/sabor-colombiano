@@ -6,8 +6,8 @@ import { getProducts } from '@/lib/services/products';
 import { getCategories } from '@/lib/services/categories';
 
 export const metadata: Metadata = {
-  title: 'Empalombia - Inicio',
-  description: 'Comida colombiana auténtica',
+    title: 'Empalombia - Inicio',
+    description: 'Comida colombiana auténtica',
 };
 
 // Async Server Component
@@ -27,7 +27,7 @@ const Home = async () => {
                 <div className="w-full">
                     <div className="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat rounded-xl items-center justify-center p-4 relative overflow-hidden group">
                         <div className="absolute inset-0 bg-black/40"></div>
-                        <div className="absolute inset-0 bg-[url('https://lh3.googleusercontent.com/aida-public/AB6AXuBDytjv9nAH4WH7NmrSNoc1S-LVI9whOT5mOohSP3RjfZ6VKUl1EjxXrcMMqCd3LrUCIX9B-Ja-7r3cxcu6LY7OWeDjGoGu8ocXrdbiAS_7eecDeZXvnFe0CKcVNGL-uP9qyWS39VFFYxMsIx-onFcuMo16Ox5RwOzA2oKQX8xitgqjYmSPJte45wtqyTWCjhsHvZxXC1Jmvb7SDFLXDqEtKPwXcaKwpVJ2qL355vQMRd6mTwI-5W-54w2zrC9flfDW9Njnv7TrFVM')] bg-cover bg-center -z-10"></div>
+                        <div className="absolute inset-0 bg-[url('/img/banner%20principal%20v2.jpeg')] bg-cover bg-center -z-10"></div>
                         <div className="flex flex-col gap-2 text-center max-w-2xl z-10">
                             <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] sm:text-5xl">El Sabor de Empalombia, Directo a tu Mesa</h1>
                             <h2 className="text-white text-sm font-normal leading-normal sm:text-base">Descubre la auténtica comida colombiana preparada con amor y los ingredientes más frescos.</h2>
@@ -41,14 +41,16 @@ const Home = async () => {
                 <section className="py-12">
                     <h2 className="text-slate-900 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-4 pt-5 text-center sm:text-left">Los Más Pedidos</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
-                        {featuredProducts.map((item) => (
+                        {featuredProducts.map((item, index) => (
                             <Link href={`/product/${item.id}`} key={item.id} className="flex flex-col gap-3 pb-3 bg-white rounded-xl overflow-hidden border border-black/10 hover:shadow-lg transition-all cursor-pointer">
                                 <div className="relative w-full aspect-[4/3]">
-                                    <Image 
-                                        src={item.image} 
-                                        alt={item.name} 
+                                    <Image
+                                        src={item.image}
+                                        alt={item.name}
                                         fill
                                         className="object-cover"
+                                        priority={index < 2}
+                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                                     />
                                 </div>
                                 <div className="px-4">

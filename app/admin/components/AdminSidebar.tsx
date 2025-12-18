@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 const AdminSidebar: React.FC = () => {
@@ -15,50 +16,50 @@ const AdminSidebar: React.FC = () => {
             <div className="flex flex-col gap-8">
                 <div className="flex items-center gap-2 px-2">
                     <div className="relative size-8">
-                        <img src="/img/logo2.png" alt="Empalombia" className="object-contain w-full h-full" />
+                        <Image src="/img/logo2.png" alt="Empalombia" fill className="object-contain" sizes="32px" />
                     </div>
                     <h1 className="text-slate-900 text-xl font-bold">Empalombia</h1>
                 </div>
                 {/* ... links unchanged ... */}
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
-                        <Link 
-                            href="/admin" 
+                        <Link
+                            href="/admin"
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
                         >
                             <span className="material-symbols-outlined">dashboard</span>
                             <p className="text-sm font-medium leading-normal">Dashboard</p>
                         </Link>
-                        <Link 
-                            href="/admin/orders" 
+                        <Link
+                            href="/admin/orders"
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin/orders') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
                         >
                             <span className="material-symbols-outlined">shopping_cart</span>
                             <p className="text-sm font-medium leading-normal">Pedidos</p>
                         </Link>
-                        <Link 
-                            href="/admin/products" 
+                        <Link
+                            href="/admin/products"
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin/products') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
                         >
                             <span className="material-symbols-outlined">inventory_2</span>
                             <p className="text-sm font-medium leading-normal">Productos</p>
                         </Link>
-                        <Link 
-                            href="/admin/stock" 
+                        <Link
+                            href="/admin/stock"
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin/stock') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
                         >
                             <span className="material-symbols-outlined">inventory</span>
                             <p className="text-sm font-medium leading-normal">Inventario</p>
                         </Link>
-                        <Link 
-                            href="/admin/categories" 
+                        <Link
+                            href="/admin/categories"
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin/categories') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
                         >
                             <span className="material-symbols-outlined">category</span>
                             <p className="text-sm font-medium leading-normal">Categorías</p>
                         </Link>
-                        <Link 
-                            href="/admin/customers" 
+                        <Link
+                            href="/admin/customers"
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isActive('/admin/customers') ? 'bg-primary-admin/10 text-primary-admin' : 'text-slate-600 hover:bg-gray-100'}`}
                         >
                             <span className="material-symbols-outlined">group</span>
@@ -71,11 +72,11 @@ const AdminSidebar: React.FC = () => {
                 <div className="border-t pt-4">
                     <div className="flex gap-3 items-center">
                         <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gray-100 flex items-center justify-center overflow-hidden">
-                             {user?.photoURL ? (
-                                <img src={user.photoURL} alt="User" width={40} height={40} />
-                             ) : (
+                            {user?.photoURL ? (
+                                <Image src={user.photoURL} alt="User" width={40} height={40} className="object-cover" />
+                            ) : (
                                 <span className="material-symbols-outlined text-slate-400">person</span>
-                             )}
+                            )}
                         </div>
                         <div className="flex flex-col overflow-hidden">
                             <h1 className="text-slate-900 text-sm font-medium leading-normal truncate max-w-[100px]">{user?.displayName || 'Admin'}</h1>
