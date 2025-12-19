@@ -58,5 +58,7 @@ export interface Order {
     customerName: string;
     customerPhone?: string;
     orderNotes?: string; // Optional message from user
+    mercadoPagoPaymentId?: string; // Mercado Pago payment ID
+    mercadoPagoStatus?: string; // Mercado Pago payment status
     createdAt: number;
 }

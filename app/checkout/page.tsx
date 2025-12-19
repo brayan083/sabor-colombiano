@@ -23,8 +23,8 @@ export default function CheckoutPage() {
         lastName: '',
         phone: '',
         address: '',
-        locality: '', 
-        postalCode: '', 
+        locality: '',
+        postalCode: '',
         orderNotes: '',
         paymentMethod: 'mercado_pago' as 'mercado_pago' | 'transfer' | 'cash',
         deliveryMethod: 'delivery' as 'delivery' | 'pickup'
@@ -93,7 +93,7 @@ export default function CheckoutPage() {
 
         try {
             // ... (construct order object logic same as before) ...
-            
+
             if (formData.paymentMethod === 'mercado_pago') {
                 // Call API to create preference
                 const response = await fetch('/api/payments/mercadopago', {
@@ -117,7 +117,7 @@ export default function CheckoutPage() {
                     throw new Error('No se pudo iniciar el pago con Mercado Pago');
                 }
             }
-            
+
             // Standard order creation (Cash/Transfer)
             const orderItems: OrderItem[] = cart.map(item => ({
                 productId: item.id,
@@ -141,20 +141,20 @@ export default function CheckoutPage() {
                 createdAt: Date.now()
             };
 
-            const newOrder: Omit<Order, 'id'> = formData.deliveryMethod === 'delivery' 
+            const newOrder: Omit<Order, 'id'> = formData.deliveryMethod === 'delivery'
                 ? {
                     ...baseOrder,
                     shippingAddress: {
                         street: formData.address,
-                        city: formData.locality, 
-                        state: '', 
+                        city: formData.locality,
+                        state: '',
                         zip: formData.postalCode
                     }
                 }
                 : baseOrder;
 
             const orderId = await createOrder(newOrder);
-            isOrderPlaced.current = true; 
+            isOrderPlaced.current = true;
             clearCart();
             router.push(`/checkout/success?orderId=${orderId}`);
         } catch (error: any) {
@@ -175,23 +175,30 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-20 py-10">
-            <h1 className="text-3xl font-black text-slate-900 mb-8">Proceso de Pago</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                    <span className="material-symbols-outlined text-primary text-4xl">shopping_cart_checkout</span>
+                    <h1 className="text-3xl sm:text-4xl font-black text-slate-900">Finalizar Compra</h1>
+                </div>
+                <p className="text-slate-600">Completa los datos para recibir tu pedido</p>
+            </div>
 
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
-                
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+
                 {/* Left: Forms */}
                 <div className="flex-1 space-y-6">
                     <form id="checkout-form" onSubmit={handleSubmit} className="space-y-6">
-                        
+
                         {/* 0. Delivery Method */}
                         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                             <h2 className="text-xl font-bold text-slate-900 mb-4">Método de Entrega</h2>
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${formData.deliveryMethod === 'delivery' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}>
-                                    <input 
-                                        type="radio" 
-                                        name="deliveryMethod" 
+                                    <input
+                                        type="radio"
+                                        name="deliveryMethod"
                                         value="delivery"
                                         checked={formData.deliveryMethod === 'delivery'}
                                         onChange={() => handleDeliveryChange('delivery')}
@@ -205,9 +212,9 @@ export default function CheckoutPage() {
                                 </label>
 
                                 <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${formData.deliveryMethod === 'pickup' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}>
-                                    <input 
-                                        type="radio" 
-                                        name="deliveryMethod" 
+                                    <input
+                                        type="radio"
+                                        name="deliveryMethod"
                                         value="pickup"
                                         checked={formData.deliveryMethod === 'pickup'}
                                         onChange={() => handleDeliveryChange('pickup')}
@@ -232,8 +239,8 @@ export default function CheckoutPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Nombres</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleInputChange}
@@ -243,8 +250,8 @@ export default function CheckoutPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Apellidos</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         name="lastName"
                                         value={formData.lastName}
                                         onChange={handleInputChange}
@@ -252,11 +259,11 @@ export default function CheckoutPage() {
                                         required
                                     />
                                 </div>
-                                
+
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
-                                    <input 
-                                        type="tel" 
+                                    <input
+                                        type="tel"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleInputChange}
@@ -268,7 +275,7 @@ export default function CheckoutPage() {
 
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Mensaje Opcional</label>
-                                    <textarea 
+                                    <textarea
                                         name="orderNotes"
                                         value={formData.orderNotes}
                                         onChange={handleInputChange}
@@ -290,8 +297,8 @@ export default function CheckoutPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             name="address"
                                             value={formData.address}
                                             onChange={handleInputChange}
@@ -303,8 +310,8 @@ export default function CheckoutPage() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Localidad</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             name="locality"
                                             value={formData.locality}
                                             onChange={handleInputChange}
@@ -315,8 +322,8 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Código Postal</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             name="postalCode"
                                             value={formData.postalCode}
                                             onChange={handleInputChange}
@@ -331,12 +338,12 @@ export default function CheckoutPage() {
 
                         {/* Pickup Info (Conditional) */}
                         {formData.deliveryMethod === 'pickup' && (
-                           <div className="bg-white p-6 rounded-xl border border-blue-200 bg-blue-50/50 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                            <div className="bg-white p-6 rounded-xl border border-blue-200 bg-blue-50/50 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
                                 <div className="flex items-start gap-3">
                                     <span className="material-symbols-outlined text-primary text-3xl">store</span>
                                     <div>
                                         <h3 className="font-bold text-slate-900 text-lg">Retiro en Empalombia</h3>
-                                        <p className="text-slate-600 mt-1">Calle 85 #12-34, Zona T<br/>Bogotá, Cundinamarca</p>
+                                        <p className="text-slate-600 mt-1">Calle 85 #12-34, Zona T<br />Bogotá, Cundinamarca</p>
                                         <p className="text-sm text-slate-500 mt-2">Horario: Lunes a Sábado, 11:00 AM - 9:00 PM</p>
                                         <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary bg-white px-3 py-1 rounded-full shadow-sm border border-primary/20">
                                             <span className="material-symbols-outlined text-sm">check</span>
@@ -344,7 +351,7 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
                                 </div>
-                           </div>
+                            </div>
                         )}
 
                         {/* 3. Payment Method */}
@@ -356,9 +363,9 @@ export default function CheckoutPage() {
 
                             <div className="space-y-3">
                                 <label className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${formData.paymentMethod === 'mercado_pago' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}>
-                                    <input 
-                                        type="radio" 
-                                        name="paymentMethod" 
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
                                         value="mercado_pago"
                                         checked={formData.paymentMethod === 'mercado_pago'}
                                         onChange={() => handlePaymentChange('mercado_pago')}
@@ -374,9 +381,9 @@ export default function CheckoutPage() {
 
                                 <label className={`flex flex-col gap-0 p-0 rounded-xl border cursor-pointer transition-all ${formData.paymentMethod === 'transfer' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}>
                                     <div className="flex items-center gap-4 p-4 w-full">
-                                        <input 
-                                            type="radio" 
-                                            name="paymentMethod" 
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
                                             value="transfer"
                                             checked={formData.paymentMethod === 'transfer'}
                                             onChange={() => handlePaymentChange('transfer')}
@@ -389,7 +396,7 @@ export default function CheckoutPage() {
                                             <span className="font-medium text-slate-900">Transferencia Bancaria</span>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Bank Details Conditional Rendering */}
                                     {formData.paymentMethod === 'transfer' && (
                                         <div className="px-4 pb-4 ml-9 animate-in slide-in-from-top-2 fade-in duration-200">
@@ -410,9 +417,9 @@ export default function CheckoutPage() {
                                 </label>
 
                                 <label className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${formData.paymentMethod === 'cash' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'}`}>
-                                    <input 
-                                        type="radio" 
-                                        name="paymentMethod" 
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
                                         value="cash"
                                         checked={formData.paymentMethod === 'cash'}
                                         onChange={() => handlePaymentChange('cash')}
@@ -433,63 +440,66 @@ export default function CheckoutPage() {
 
                 {/* Right: Summary */}
                 <div className="w-full lg:w-96">
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm sticky top-24">
-                        <h2 className="text-xl font-bold text-slate-900 mb-6">Resumen del Pedido</h2>
-                        
-                        <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 rounded-2xl border-2 border-gray-200 shadow-sm lg:sticky lg:top-24">
+                        <div className="flex items-center gap-2 mb-6">
+                            <span className="material-symbols-outlined text-primary text-2xl">receipt_long</span>
+                            <h2 className="text-2xl font-black text-slate-900">Resumen del Pedido</h2>
+                        </div>
+
+                        <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
                             {cart.map((item) => (
-                                <div key={item.id} className="flex gap-4">
+                                <div key={item.id} className="flex gap-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary/20 transition-colors">
                                     <div className="relative size-16 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />
                                     </div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <p className="text-sm font-bold text-slate-900 line-clamp-2">{item.name}</p>
-                                        <p className="text-xs text-slate-500">Cant: {item.quantity}</p>
+                                        <p className="text-xs text-slate-500 mt-1">Cant: {item.quantity}</p>
                                     </div>
-                                    <p className="text-sm font-bold text-slate-900">{formatPrice(item.price * item.quantity)}</p>
+                                    <p className="text-sm font-black text-primary">{formatPrice(item.price * item.quantity)}</p>
                                 </div>
                             ))}
                         </div>
-                        
-                        <div className="border-t border-gray-200 my-4 pt-4 space-y-3">
-                            <div className="flex justify-between text-slate-600">
+
+                        <div className="border-t border-gray-200 pt-4 space-y-3 mb-4">
+                            <div className="flex justify-between text-sm text-slate-600">
                                 <span>Subtotal</span>
-                                <span>{formatPrice(totalPrice)}</span>
+                                <span className="font-semibold">{formatPrice(totalPrice)}</span>
                             </div>
-                            <div className="flex justify-between text-slate-600">
+                            <div className="flex justify-between text-sm text-slate-600">
                                 <span>Entrega</span>
                                 {formData.deliveryMethod === 'delivery' ? (
-                                    <span className="text-green-600 font-medium">Gratis</span>
+                                    <span className="text-green-600 font-bold">Gratis</span>
                                 ) : (
-                                    <span className="text-slate-900 font-medium">Retiro en local</span>
+                                    <span className="text-slate-900 font-semibold">Retiro en local</span>
                                 )}
                             </div>
                         </div>
-                        
-                        <div className="border-t border-gray-200 my-4 pt-4">
-                            <div className="flex justify-between items-center text-xl font-black text-slate-900">
-                                <span>Total</span>
-                                <span>{formatPrice(totalPrice)}</span>
+
+                        <div className="bg-primary/5 rounded-xl p-4 mb-6 border border-primary/20">
+                            <div className="flex justify-between items-center">
+                                <span className="text-lg font-bold text-slate-900">Total</span>
+                                <span className="text-2xl font-black text-primary">{formatPrice(totalPrice)}</span>
                             </div>
                         </div>
 
                         {errorMessage && (
-                            <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                                <div className="flex items-center gap-2 text-red-800 font-bold text-sm">
-                                    <span className="material-symbols-outlined text-[18px]">error</span>
-                                    Error al procesar el pedido
+                            <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-start gap-2">
+                                    <span className="material-symbols-outlined text-red-600 text-xl">error</span>
+                                    <div>
+                                        <p className="text-sm font-bold text-red-800">Error al procesar el pedido</p>
+                                        <p className="text-xs text-red-600 mt-1">{errorMessage}</p>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-red-600 pl-6.5">
-                                    {errorMessage}
-                                </p>
                             </div>
                         )}
-                        
-                        <button 
+
+                        <button
                             type="submit"
                             form="checkout-form"
                             disabled={isSubmitting}
-                            className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold py-4 rounded-xl hover:bg-primary/90 transition-all shadow-md active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold py-4 rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <>
@@ -498,14 +508,14 @@ export default function CheckoutPage() {
                                 </>
                             ) : (
                                 <>
-                                    Confirmar Pedido
-                                    <span className="material-symbols-outlined">check</span>
+                                    <span>Confirmar Pedido</span>
+                                    <span className="material-symbols-outlined">check_circle</span>
                                 </>
                             )}
                         </button>
-                        
-                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
-                            <span className="material-symbols-outlined text-sm">lock</span>
+
+                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
+                            <span className="material-symbols-outlined text-green-600 text-sm">lock</span>
                             Todas las transacciones son seguras
                         </div>
                     </div>

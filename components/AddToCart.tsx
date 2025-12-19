@@ -7,11 +7,12 @@ import { useCart } from '@/lib/context/CartContext';
 interface AddToCartProps {
     product: Product;
     wrapperClassName?: string;
+    compact?: boolean;
 }
 
-const AddToCart: React.FC<AddToCartProps> = ({ product, wrapperClassName = "" }) => {
+const AddToCart: React.FC<AddToCartProps> = ({ product, wrapperClassName = "", compact = false }) => {
     const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
-    
+
     // Check if product is already in cart
     const cartItem = cart.find(item => item.id === product.id);
     const quantity = cartItem ? cartItem.quantity : 0;
@@ -51,20 +52,20 @@ const AddToCart: React.FC<AddToCartProps> = ({ product, wrapperClassName = "" })
     if (quantity > 0) {
         return (
             <div className={`flex items-center justify-between gap-2 w-full ${wrapperClassName}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                 <div className="flex flex-1 items-center justify-between rounded-lg border border-primary bg-primary/5 px-1 py-1">
-                    <button 
+                <div className={`flex flex-1 items-center justify-between rounded-lg border border-primary bg-primary/5 ${compact ? 'px-1 py-0.5' : 'px-1 py-1'}`}>
+                    <button
                         onClick={handleDecrement}
-                        className="flex h-9 w-9 items-center justify-center rounded-md bg-white text-primary shadow-sm transition-transform hover:scale-105 active:scale-95"
+                        className={`flex items-center justify-center rounded-md bg-white text-primary shadow-sm transition-transform hover:scale-105 active:scale-95 ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
                         aria-label="Disminuir cantidad"
                     >
                         <span className="material-symbols-outlined text-sm">{quantity === 1 ? 'delete' : 'remove'}</span>
                     </button>
-                    
-                    <span className="px-2 font-bold text-slate-900 min-w-[2ch] text-center">{quantity}</span>
-                    
-                    <button 
+
+                    <span className={`font-bold text-slate-900 min-w-[2ch] text-center ${compact ? 'px-1 text-xs' : 'px-2'}`}>{quantity}</span>
+
+                    <button
                         onClick={handleIncrement}
-                        className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                        className={`flex items-center justify-center rounded-md bg-primary text-white shadow-sm transition-transform hover:scale-105 active:scale-95 ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
                         aria-label="Aumentar cantidad"
                     >
                         <span className="material-symbols-outlined text-sm">add</span>
@@ -76,12 +77,12 @@ const AddToCart: React.FC<AddToCartProps> = ({ product, wrapperClassName = "" })
 
     return (
         <div className={`w-full ${wrapperClassName}`}>
-            <button 
+            <button
                 onClick={handleAddToCart}
-                className="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#FFCD00] px-4 py-3 text-sm font-bold text-[#003893] transition-all hover:bg-[#FFD700] hover:shadow-md active:scale-[0.98]"
+                className={`group flex w-full items-center justify-center gap-2 rounded-lg bg-[#FFCD00] text-sm font-bold text-[#003893] transition-all hover:bg-[#FFD700] hover:shadow-md active:scale-[0.98] ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
             >
                 <span className="material-symbols-outlined text-base">add_shopping_cart</span>
-                Añadir al Carrito
+                {compact ? 'Añadir' : 'Añadir al Carrito'}
             </button>
         </div>
     );
