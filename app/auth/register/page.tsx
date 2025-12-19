@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { syncUser } from '@/lib/services/users';
 import Link from 'next/link';
 
-const RegisterPage: React.FC = () => {
+function RegisterForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get('redirect') || '/';
@@ -52,12 +52,12 @@ const RegisterPage: React.FC = () => {
 
             router.push(redirectUrl);
         } catch (err: any) {
-             console.error("Registration error:", err);
-             if (err.code === 'auth/email-already-in-use') {
-                 setError('El correo electrónico ya está registrado.');
-             } else {
-                 setError('Error al registrar usuario. Inténtalo de nuevo.');
-             }
+            console.error("Registration error:", err);
+            if (err.code === 'auth/email-already-in-use') {
+                setError('El correo electrónico ya está registrado.');
+            } else {
+                setError('Error al registrar usuario. Inténtalo de nuevo.');
+            }
         } finally {
             setLoading(false);
         }
@@ -80,10 +80,10 @@ const RegisterPage: React.FC = () => {
                 <form onSubmit={handleRegister} className="space-y-6">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Nombre Completo</label>
-                        <input 
-                            type="text" 
-                            value={name} 
-                            onChange={(e) => setName(e.target.value)} 
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                             placeholder="Juan Pérez"
@@ -91,10 +91,10 @@ const RegisterPage: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Correo Electrónico</label>
-                        <input 
-                            type="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                             placeholder="juan@ejemplo.com"
@@ -102,10 +102,10 @@ const RegisterPage: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Número de Teléfono</label>
-                        <input 
-                            type="tel" 
-                            value={phoneNumber} 
-                            onChange={(e) => setPhoneNumber(e.target.value)} 
+                        <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                             placeholder="+57 300 123 4567"
@@ -113,20 +113,20 @@ const RegisterPage: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Contraseña</label>
-                        <input 
-                            type="password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                             placeholder="••••••••"
                         />
-                         <p className="text-xs text-slate-400">Mínimo 6 caracteres</p>
+                        <p className="text-xs text-slate-400">Mínimo 6 caracteres</p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             id="terms"
                             checked={termsAccepted}
                             onChange={(e) => setTermsAccepted(e.target.checked)}
@@ -137,8 +137,8 @@ const RegisterPage: React.FC = () => {
                         </label>
                     </div>
 
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={loading}
                         className="w-full py-3 bg-primary-admin text-white rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
                     >
@@ -146,11 +146,23 @@ const RegisterPage: React.FC = () => {
                     </button>
                 </form>
 
-                 <div className="mt-8 text-center text-sm text-slate-500">
+                <div className="mt-8 text-center text-sm text-slate-500">
                     ¿Ya tienes una cuenta? <Link href="/auth/login" className="text-primary-admin font-bold hover:underline">Inicia Sesión</Link>
                 </div>
             </div>
         </div>
+    );
+}
+
+const RegisterPage: React.FC = () => {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-admin"></div>
+            </div>
+        }>
+            <RegisterForm />
+        </Suspense>
     );
 };
 
