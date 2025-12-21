@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
                 description: item.description || item.name,
                 quantity: item.quantity,
                 unit_price: Number(item.price),
-                currency_id: 'ARS' // Cambiar a ARS si tu cuenta es de Argentina
+                currency_id: 'ARS', // Cambiar a ARS si tu cuenta es de Argentina
+                picture_url: item.image || '' // Add product image URL
             })),
             payer: {
                 name: payer.firstName || 'Cliente',

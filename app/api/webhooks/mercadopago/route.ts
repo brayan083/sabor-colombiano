@@ -60,6 +60,35 @@ export async function POST(req: NextRequest) {
                     return NextResponse.json({ error: 'No user ID' }, { status: 400 });
                 }
 
+                // Check if this is for an existing order
+                const isExistingOrder = metadata.is_existing_order === true;
+                const existingOrderId = metadata.order_id || payment.external_reference;
+
+                if (isExistingOrder && existingOrderId) {
+                    console.log('🔄 Updating existing order:', existingOrderId);
+
+                    // Import the update function
+                    const { updateOrderPayment } = await import('@/lib/services/orders');
+
+                    try {
+                        await updateOrderPayment(existingOrderId, paymentId, payment.status);
+
+                        console.log('✅ Order updated successfully:', existingOrderId);
+
+                        return NextResponse.json({
+                            success: true,
+                            orderId: existingOrderId,
+                            message: 'Order updated successfully'
+                        });
+                    } catch (error) {
+                        console.error('❌ Error updating order:', error);
+                        return NextResponse.json({
+                            error: 'Error updating order',
+                            details: error instanceof Error ? error.message : 'Unknown error'
+                        }, { status: 500 });
+                    }
+                }
+
                 // Extract order items from payment
                 const orderItems: OrderItem[] = payment.additional_info?.items?.map((item: any) => ({
                     productId: item.id,

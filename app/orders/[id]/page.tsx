@@ -16,6 +16,8 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
     const router = useRouter();
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -86,6 +88,33 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
             case 'shipped': return 'Enviado';
             case 'cancelled': return 'Cancelado';
             default: return status;
+        }
+    };
+
+    const handlePayWithMercadoPago = async () => {
+        if (!order) return;
+
+        setPaymentLoading(true);
+        setPaymentError(null);
+
+        try {
+            const response = await fetch(`/api/orders/${order.id}/pay`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await response.json();
+
+            if (data.init_point) {
+                // Redirect to Mercado Pago
+                window.location.href = data.init_point;
+            } else {
+                throw new Error(data.error || 'No se pudo iniciar el pago');
+            }
+        } catch (error: any) {
+            console.error('Error initiating payment:', error);
+            setPaymentError(error.message || 'Error al procesar el pago');
+            setPaymentLoading(false);
         }
     };
 
@@ -170,7 +199,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                             <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-slate-50 transition-colors p-2 rounded">
                                 <div className="flex items-center gap-4">
                                     <div className="size-12 bg-gray-100 rounded-md overflow-hidden relative">
-                                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="48px" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-slate-900 text-sm">{item.name}</p>
@@ -189,7 +218,48 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                 </div>
             </div>
 
-            {order.paymentMethod === 'transfer' && (
+            {/* Payment button for pending orders */}
+            {order.status === 'pending' && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="bg-blue-100 p-3 rounded-full">
+                            <span className="material-symbols-outlined text-blue-600 text-2xl">credit_card</span>
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-bold text-slate-900 text-lg mb-2">Pagar con Mercado Pago</h3>
+                            <p className="text-sm text-slate-600 mb-4">
+                                Completa tu pago de forma segura con tarjeta de crédito o débito
+                            </p>
+
+                            {paymentError && (
+                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-sm text-red-800">{paymentError}</p>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handlePayWithMercadoPago}
+                                disabled={paymentLoading}
+                                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {paymentLoading ? (
+                                    <>
+                                        <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                        Procesando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">payment</span>
+                                        Pagar Ahora
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {order.paymentMethod === 'transfer' && order.status === 'pending' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
                     <span className="material-symbols-outlined text-blue-600">info</span>
                     <div>

@@ -113,3 +113,44 @@ export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
         return [];
     }
 };
+
+export const getOrderByPaymentId = async (paymentId: string): Promise<Order | null> => {
+    try {
+        const q = query(
+            collection(db, COLLECTION_NAME),
+            where("mercadoPagoPaymentId", "==", paymentId)
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return null;
+        }
+
+        // Return the first matching order
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Order;
+    } catch (error) {
+        console.error("Error fetching order by payment ID:", error);
+        return null;
+    }
+};
+
+export const updateOrderPayment = async (
+    id: string,
+    paymentId: string,
+    paymentStatus: string
+): Promise<void> => {
+    try {
+        const docRef = doc(db, COLLECTION_NAME, id);
+        await updateDoc(docRef, {
+            status: 'paid',
+            paymentMethod: 'mercado_pago',
+            mercadoPagoPaymentId: paymentId,
+            mercadoPagoStatus: paymentStatus
+        });
+        console.log(`✅ Order ${id} updated with payment ${paymentId}`);
+    } catch (error) {
+        console.error("Error updating order payment:", error);
+        throw error;
+    }
+};
