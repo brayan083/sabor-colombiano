@@ -7,12 +7,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useCart } from '@/lib/context/CartContext';
 import { createOrder } from '@/lib/services/orders';
+import { updateUserPhone } from '@/lib/services/users';
 import { Order, OrderItem } from '@/types';
 
 import { formatPrice } from '@/lib/utils';
 
 export default function CheckoutPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, refreshUser } = useAuth();
     const { cart, totalPrice, clearCart } = useCart();
     const router = useRouter();
 
@@ -45,20 +46,20 @@ export default function CheckoutPage() {
         }
     }, [authLoading, user, router]);
 
-    // Auto-fill user data if available (recreating this as it might have been lost)
+    // Auto-fill user data when component loads
     useEffect(() => {
         if (user) {
-            // Check if user has a profile with extra data (omitted for now as I don't have the context of where profile data comes from exactly beyond 'user' object which is usually auth user)
-            // Assuming basic auth user displayName/email/phone for now or just skipping auto-fill if specific profile fetch logic was complex and lost.
-            // Looking at step 521, there wasn't explicit complex auto-fill visible in the snippet provided there? 
-            // Wait, Step 521 shows line 34: // ... (keep protection and auto-fill effects unchanged)
-            // Ah, the file view in 521 was NOT complete, it had comments hiding code? 
-            // "The above content shows the entire, complete file contents of the requested file." - wait, line 34 says "// ... (keep protection and auto-fill effects unchanged)"?
-            // If the original file had that comment LITERALY, then I don't need to restore code that wasn't there.
-            // BUT, if Step 521 view was actually truncated by the *system* or *tool* before passing to me...
-            // "The following code has been modified to include a line number... The above content shows the entire, complete file contents... "
-            // If line 34 in Step 521 was explicitly visible as `34:     // ... (keep protection and auto-fill effects unchanged)` then that comment was IN THE FILE.
-            // If so, I just need to put back the state and handlers.
+            // Split displayName into firstName and lastName
+            const nameParts = user.displayName?.trim().split(' ') || [];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            setFormData(prev => ({
+                ...prev,
+                firstName: prev.firstName || firstName,
+                lastName: prev.lastName || lastName,
+                phone: prev.phone || user.phoneNumber || ''
+            }));
         }
     }, [user]);
 
@@ -92,7 +93,11 @@ export default function CheckoutPage() {
         setErrorMessage(null);
 
         try {
-            // ... (construct order object logic same as before) ...
+            // Save phone number to user profile if not already saved
+            if (formData.phone && formData.phone !== user.phoneNumber) {
+                await updateUserPhone(user.uid, formData.phone);
+                await refreshUser(); // Update local user state immediately
+            }
 
             if (formData.paymentMethod === 'mercado_pago') {
                 // Call API to create preference

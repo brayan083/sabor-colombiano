@@ -52,23 +52,23 @@ const AddToCart: React.FC<AddToCartProps> = ({ product, wrapperClassName = "", c
     if (quantity > 0) {
         return (
             <div className={`flex items-center justify-between gap-2 w-full ${wrapperClassName}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                <div className={`flex flex-1 items-center justify-between rounded-lg border border-primary bg-primary/5 ${compact ? 'px-1 py-0.5' : 'px-1 py-1'}`}>
+                <div className={`flex flex-1 items-center justify-between rounded-xl sm:rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/5 to-amber-500/5 ${compact ? 'px-1 py-0.5' : 'px-1 py-1'}`}>
                     <button
                         onClick={handleDecrement}
-                        className={`flex items-center justify-center rounded-md bg-white text-primary shadow-sm transition-transform hover:scale-105 active:scale-95 ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
+                        className={`flex items-center justify-center rounded-lg bg-white text-primary shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95 ${compact ? 'h-6 w-6 sm:h-7 sm:w-7' : 'h-7 w-7 sm:h-9 sm:w-9'}`}
                         aria-label="Disminuir cantidad"
                     >
-                        <span className="material-symbols-outlined text-sm">{quantity === 1 ? 'delete' : 'remove'}</span>
+                        <span className="material-symbols-outlined text-xs sm:text-sm">{quantity === 1 ? 'delete' : 'remove'}</span>
                     </button>
 
-                    <span className={`font-bold text-slate-900 min-w-[2ch] text-center ${compact ? 'px-1 text-xs' : 'px-2'}`}>{quantity}</span>
+                    <span className={`font-bold text-slate-900 min-w-[2ch] text-center ${compact ? 'px-1 text-xs' : 'px-1 sm:px-2 text-sm sm:text-base'}`}>{quantity}</span>
 
                     <button
                         onClick={handleIncrement}
-                        className={`flex items-center justify-center rounded-md bg-primary text-white shadow-sm transition-transform hover:scale-105 active:scale-95 ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
+                        className={`flex items-center justify-center rounded-lg bg-gradient-to-r from-primary to-amber-500 text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 ${compact ? 'h-6 w-6 sm:h-7 sm:w-7' : 'h-7 w-7 sm:h-9 sm:w-9'}`}
                         aria-label="Aumentar cantidad"
                     >
-                        <span className="material-symbols-outlined text-sm">add</span>
+                        <span className="material-symbols-outlined text-xs sm:text-sm">add</span>
                     </button>
                 </div>
             </div>
@@ -79,10 +79,11 @@ const AddToCart: React.FC<AddToCartProps> = ({ product, wrapperClassName = "", c
         <div className={`w-full ${wrapperClassName}`}>
             <button
                 onClick={handleAddToCart}
-                className={`group flex w-full items-center justify-center gap-2 rounded-lg bg-[#FFCD00] text-sm font-bold text-[#003893] transition-all hover:bg-[#FFD700] hover:shadow-md active:scale-[0.98] ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
+                className={`group flex w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-amber-500 text-xs sm:text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] ${compact ? 'px-3 py-2' : 'px-3 py-2 sm:px-4 sm:py-3'}`}
             >
-                <span className="material-symbols-outlined text-base">add_shopping_cart</span>
-                {compact ? 'Añadir' : 'Añadir al Carrito'}
+                <span className="material-symbols-outlined text-[16px] sm:text-[18px]">add_shopping_cart</span>
+                <span className="hidden xs:inline">{compact ? 'Añadir' : 'Añadir al Carrito'}</span>
+                <span className="xs:hidden">Añadir</span>
             </button>
         </div>
     );

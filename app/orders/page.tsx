@@ -226,6 +226,7 @@ export default function OrderHistory() {
                                                 </div>
                                             </div>
 
+
                                             <div className="flex flex-wrap items-center gap-4 text-sm">
                                                 {/* Date */}
                                                 <div className="flex items-center gap-2 text-slate-600">
@@ -241,10 +242,37 @@ export default function OrderHistory() {
                                                     <span>{order.deliveryMethod === 'pickup' ? 'Retiro en Local' : 'Domicilio'}</span>
                                                 </div>
 
-                                                {/* Items Count */}
-                                                <div className="flex items-center gap-2 text-slate-600">
-                                                    <span className="material-symbols-outlined text-base">shopping_cart</span>
-                                                    <span>{order.items.length} {order.items.length === 1 ? 'producto' : 'productos'}</span>
+                                                {/* Items Count with Product Images */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-2 text-slate-600">
+                                                        <span className="material-symbols-outlined text-base">shopping_cart</span>
+                                                        <span>{order.items.length} {order.items.length === 1 ? 'producto' : 'productos'}</span>
+                                                    </div>
+
+                                                    {/* Product Thumbnails */}
+                                                    <div className="flex items-center gap-1">
+                                                        {order.items.slice(0, 3).map((item, index) => (
+                                                            <div key={index} className="relative group/img">
+                                                                <div className="w-10 h-10 rounded-md overflow-hidden border border-gray-200 group-hover/img:border-primary transition-colors">
+                                                                    <img
+                                                                        src={item.image}
+                                                                        alt={item.name}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                                {item.quantity > 1 && (
+                                                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white shadow-sm">
+                                                                        {item.quantity}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                        {order.items.length > 3 && (
+                                                            <div className="w-10 h-10 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                                                <span className="text-[10px] font-bold text-gray-600">+{order.items.length - 3}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

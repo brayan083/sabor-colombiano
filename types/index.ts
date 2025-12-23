@@ -30,6 +30,7 @@ export interface User {
     phoneNumber?: string;
     termsAccepted?: boolean;
     photoURL?: string | null;
+    googlePhotoURL?: string | null; // Store original Google photo
     createdAt: number;
 }
 

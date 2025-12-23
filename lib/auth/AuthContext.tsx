@@ -11,12 +11,14 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     signOut: () => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
-    signOut: async () => {},
+    signOut: async () => { },
+    refreshUser: async () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -24,9 +26,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    const signOut = async () => {
+        try {
+            if (auth.currentUser) {
+                localStorage.removeItem(`colfood_user_${auth.currentUser.uid}`);
+            }
+            await firebaseSignOut(auth);
+            setUser(null);
+            router.push('/');
+        } catch (error) {
+            console.error("Error signing out:", error);
+        }
+    };
+
+    const refreshUser = async () => {
+        if (!auth.currentUser) return;
+
+        try {
+            const userData = await syncUser(auth.currentUser);
+            setUser(userData);
+            localStorage.setItem(`colfood_user_${auth.currentUser.uid}`, JSON.stringify(userData));
+        } catch (error) {
+            console.error("Error refreshing user data:", error);
+        }
+    };
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
+                // Check session duration (1 day = 24 * 60 * 60 * 1000 ms)
+                const lastSignInTime = firebaseUser.metadata.lastSignInTime;
+                if (lastSignInTime) {
+                    const lastSignInDate = new Date(lastSignInTime);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - lastSignInDate.getTime());
+                    const oneDayMs = 24 * 60 * 60 * 1000;
+
+                    if (diffTime > oneDayMs) {
+                        console.log("Session expired (older than 1 day). Signing out.");
+                        await signOut();
+                        return;
+                    }
+                }
+
                 // Optimization: Try to load from cache first for instant feedback
                 const cachedUser = localStorage.getItem(`colfood_user_${firebaseUser.uid}`);
                 if (cachedUser) {
@@ -54,21 +96,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return () => unsubscribe();
     }, []);
 
-    const signOut = async () => {
-        try {
-            if (user) {
-                localStorage.removeItem(`colfood_user_${user.uid}`);
-            }
-            await firebaseSignOut(auth);
-            setUser(null);
-            router.push('/');
-        } catch (error) {
-            console.error("Error signing out:", error);
-        }
-    };
+
 
     return (
-        <AuthContext.Provider value={{ user, loading, signOut }}>
+        <AuthContext.Provider value={{ user, loading, signOut, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

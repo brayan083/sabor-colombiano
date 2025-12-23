@@ -11,10 +11,12 @@ const Header: React.FC = () => {
     const { user, signOut, loading } = useAuth();
     const { totalItems } = useCart();
     const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
     const isActive = (path: string) => pathname === path ? "text-primary font-bold" : "text-slate-700 hover:text-primary";
 
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     // Close dropdown when clicking outside
     React.useEffect(() => {
@@ -34,6 +36,11 @@ const Header: React.FC = () => {
         };
     }, [isDropdownOpen]);
 
+    // Close mobile menu on route change
+    React.useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname]);
+
     return (
         <header className="sticky top-0 z-50 w-full border-b border-black/10 bg-white/95 backdrop-blur-md px-4 sm:px-10 py-3 shadow-sm transition-all duration-200">
             <div className="relative flex items-center justify-between whitespace-nowrap">
@@ -47,16 +54,9 @@ const Header: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Center: Navigation */}
-                <nav className="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center gap-8">
-                    <Link href="/" className={`text-sm leading-normal transition-colors ${isActive('/')}`}>Inicio</Link>
+                {/* Center: Navigation - Always Visible */}
+                <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-6 sm:gap-8">
                     <Link href="/catalog" className={`text-sm leading-normal transition-colors ${isActive('/catalog')}`}>Menú</Link>
-                    {user && (
-                        <Link href="/orders" className={`text-sm leading-normal transition-colors ${isActive('/orders')}`}>Mis Pedidos</Link>
-                    )}
-                    {user && user.role === 'admin' && (
-                        <Link href="/admin" className={`text-sm leading-normal transition-colors ${isActive('/admin')}`}>Admin</Link>
-                    )}
                 </nav>
 
                 {/* Right: Actions */}
@@ -102,6 +102,10 @@ const Header: React.FC = () => {
                                                 Panel Admin
                                             </Link>
                                         )}
+                                        <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors" onClick={() => setIsDropdownOpen(false)}>
+                                            <span className="material-symbols-outlined text-[20px]">person</span>
+                                            Mi Perfil
+                                        </Link>
                                         <Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors" onClick={() => setIsDropdownOpen(false)}>
                                             <span className="material-symbols-outlined text-[20px]">receipt_long</span>
                                             Mis Pedidos
@@ -123,14 +127,28 @@ const Header: React.FC = () => {
                             )}
                         </div>
                     ) : (
-                        <div className="flex items-center gap-3">
-                            <Link href="/auth/login" className="hidden sm:block text-sm font-semibold text-slate-600 hover:text-primary transition-colors">
-                                Iniciar Sesión
-                            </Link>
-                            <Link href="/auth/register" className="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
-                                Registrarse
-                            </Link>
-                        </div>
+                        <>
+                            {/* Desktop: Show Login/Register buttons */}
+                            <div className="hidden lg:flex items-center gap-3">
+                                <Link href="/auth/login" className="text-sm font-semibold text-slate-600 hover:text-primary transition-colors">
+                                    Iniciar Sesión
+                                </Link>
+                                <Link href="/auth/register" className="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
+                                    Registrarse
+                                </Link>
+                            </div>
+
+                            {/* Mobile: Show Hamburger Menu for Auth */}
+                            <button
+                                onClick={toggleMobileMenu}
+                                className="lg:hidden flex items-center justify-center size-10 rounded-lg hover:bg-gray-100 transition-colors text-slate-700"
+                                aria-label="Toggle auth menu"
+                            >
+                                <span className="material-symbols-outlined">
+                                    {isMobileMenuOpen ? 'close' : 'menu'}
+                                </span>
+                            </button>
+                        </>
                     )}
                     <Link href="/cart" className="relative flex items-center justify-center size-10 rounded-full hover:bg-gray-100 transition-colors text-slate-700 hover:text-primary">
                         <span className="material-symbols-outlined">shopping_cart</span>
@@ -142,6 +160,28 @@ const Header: React.FC = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* Mobile Auth Menu - Only for non-authenticated users */}
+            {!user && isMobileMenuOpen && (
+                <div className="lg:hidden absolute left-0 right-0 top-full mt-0 bg-white border-t border-gray-100 shadow-lg animate-in slide-in-from-top-2 duration-200">
+                    <nav className="flex flex-col py-4">
+                        <Link
+                            href="/auth/login"
+                            className="flex items-center gap-3 px-6 py-3 text-base text-slate-700 hover:text-primary hover:bg-primary/5 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">login</span>
+                            Iniciar Sesión
+                        </Link>
+                        <Link
+                            href="/auth/register"
+                            className="flex items-center gap-3 px-6 py-3 text-base text-primary font-bold hover:bg-primary/5 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">person_add</span>
+                            Registrarse
+                        </Link>
+                    </nav>
+                </div>
+            )}
         </header>
     );
 };
