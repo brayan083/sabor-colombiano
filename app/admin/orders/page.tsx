@@ -2,28 +2,51 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getOrders } from '@/lib/services/orders';
-import { Order } from '@/types';
+import { getOrders, assignDriverToOrder } from '@/lib/services/orders';
+import { Order, User } from '@/types';
+import DriverSelector from '@/components/admin/DriverSelector';
 
 const AdminOrders: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [showDriverSelector, setShowDriverSelector] = useState(false);
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            setLoading(true);
-            try {
-                const data = await getOrders();
-                setOrders(data);
-            } catch (error) {
-                console.error("Error fetching orders:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchOrders();
     }, []);
+
+    const fetchOrders = async () => {
+        setLoading(true);
+        try {
+            const data = await getOrders();
+            setOrders(data);
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAssignDriver = (orderId: string) => {
+        setSelectedOrderId(orderId);
+        setShowDriverSelector(true);
+    };
+
+    const handleDriverSelect = async (driver: User) => {
+        if (!selectedOrderId) return;
+
+        try {
+            await assignDriverToOrder(selectedOrderId, driver.uid, driver.displayName);
+            setShowDriverSelector(false);
+            setSelectedOrderId(null);
+            await fetchOrders();
+            alert(`Repartidor ${driver.displayName} asignado exitosamente`);
+        } catch (error) {
+            console.error("Error assigning driver:", error);
+            alert('Error al asignar el repartidor');
+        }
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -43,6 +66,27 @@ const AdminOrders: React.FC = () => {
             case 'cancelled': return 'Cancelado';
             default: return status;
         }
+    };
+
+    const getDeliveryStatusBadge = (status?: string) => {
+        if (!status) return null;
+
+        const config = {
+            pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Sin asignar' },
+            assigned: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Asignado' },
+            picked_up: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Recogido' },
+            in_transit: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'En tránsito' },
+            delivered: { bg: 'bg-green-100', text: 'text-green-800', label: 'Entregado' },
+            failed: { bg: 'bg-red-100', text: 'text-red-800', label: 'Fallido' }
+        };
+
+        const statusConfig = config[status as keyof typeof config] || config.pending;
+
+        return (
+            <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${statusConfig.bg} ${statusConfig.text}`}>
+                {statusConfig.label}
+            </span>
+        );
     };
 
     return (
@@ -74,6 +118,7 @@ const AdminOrders: React.FC = () => {
                                 <th className="px-6 py-3">Cliente</th>
                                 <th className="px-6 py-3">Fecha</th>
                                 <th className="px-6 py-3">Estado</th>
+                                <th className="px-6 py-3">Repartidor</th>
                                 <th className="px-6 py-3">Total</th>
                                 <th className="px-6 py-3 text-right">Acciones</th>
                             </tr>
@@ -81,11 +126,11 @@ const AdminOrders: React.FC = () => {
                         <tbody className="divide-y divide-gray-200">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center">Cargando pedidos...</td>
+                                    <td colSpan={7} className="px-6 py-4 text-center">Cargando pedidos...</td>
                                 </tr>
                             ) : orders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center">No hay pedidos registrados.</td>
+                                    <td colSpan={7} className="px-6 py-4 text-center">No hay pedidos registrados.</td>
                                 </tr>
                             ) : orders.map((order) => (
                                 <tr key={order.id} className="bg-white border-b hover:bg-gray-50">
@@ -102,6 +147,21 @@ const AdminOrders: React.FC = () => {
                                         <span className={`text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full ${getStatusColor(order.status)}`}>
                                             {getStatusLabel(order.status)}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {order.assignedDriverName ? (
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-medium text-slate-900">{order.assignedDriverName}</span>
+                                                {getDeliveryStatusBadge(order.deliveryStatus)}
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleAssignDriver(order.id)}
+                                                className="text-xs px-3 py-1.5 bg-primary-admin/10 text-primary-admin rounded-lg hover:bg-primary-admin/20 transition-colors font-medium"
+                                            >
+                                                Asignar
+                                            </button>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4">${order.total.toFixed(2)}</td>
                                     <td className="px-6 py-4 text-right">
@@ -120,6 +180,17 @@ const AdminOrders: React.FC = () => {
                     <span className="text-sm text-slate-500">Mostrando {orders.length} pedidos</span>
                 </div>
             </div>
+
+            {/* Driver Selector Modal */}
+            <DriverSelector
+                isOpen={showDriverSelector}
+                onClose={() => {
+                    setShowDriverSelector(false);
+                    setSelectedOrderId(null);
+                }}
+                onSelect={handleDriverSelect}
+                orderId={selectedOrderId || ''}
+            />
         </div>
     );
 };

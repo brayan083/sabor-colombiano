@@ -18,6 +18,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onClose }) => {
     const menuItems = [
         { href: '/admin', icon: 'dashboard', label: 'Dashboard' },
         { href: '/admin/orders', icon: 'shopping_cart', label: 'Pedidos' },
+        { href: '/admin/drivers', icon: 'delivery_dining', label: 'Repartidores' },
         { href: '/admin/products', icon: 'inventory_2', label: 'Productos' },
         { href: '/admin/stock', icon: 'inventory', label: 'Inventario' },
         { href: '/admin/categories', icon: 'category', label: 'Categorías' },

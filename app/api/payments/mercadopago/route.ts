@@ -57,7 +57,18 @@ export async function POST(req: NextRequest) {
             auto_return: 'approved',
             notification_url: `${baseUrl}/api/webhooks/mercadopago`,
             statement_descriptor: 'EMPALOMBIA',
-            external_reference: payer.id || `order_${Date.now()}`
+            external_reference: payer.id || `order_${Date.now()}`,
+            payment_methods: {
+                excluded_payment_types: [
+                    { id: "ticket" },         // Excluye pagos en efectivo (Rapipago/Pago Fácil)
+                    { id: "atm" },            // Excluye cajeros automáticos
+                    { id: "prepaid_card" },   // Excluye tarjetas prepagas
+                    { id: "digital_currency" } // Excluye criptomonedas
+                ],
+                excluded_payment_methods: [],
+                installments: 1, // Solo 1 cuota para tarjetas de crédito
+                default_installments: 1
+            }
         };
 
         // Only add address if delivery method is delivery
@@ -72,6 +83,8 @@ export async function POST(req: NextRequest) {
         preferenceData.metadata = {
             user_id: payer.id,
             delivery_method: payer.deliveryMethod || 'delivery',
+            delivery_time_slot: body.deliveryTimeSlot || '',
+            delivery_date: body.deliveryDate || '',
             customer_name: `${payer.firstName} ${payer.lastName}`,
             customer_phone: payer.phone,
             order_notes: payer.orderNotes || '',

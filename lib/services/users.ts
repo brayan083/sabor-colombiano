@@ -65,7 +65,7 @@ export const syncUser = async (firebaseUser: FirebaseUser, additionalData?: { ph
     }
 };
 
-export const getUserRole = async (uid: string): Promise<'admin' | 'customer' | null> => {
+export const getUserRole = async (uid: string): Promise<'admin' | 'customer' | 'driver' | null> => {
     try {
         const userRef = doc(db, COLLECTION_NAME, uid);
         const userSnap = await getDoc(userRef);

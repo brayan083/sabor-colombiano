@@ -9,6 +9,8 @@ import { useCart } from '@/lib/context/CartContext';
 import { createOrder } from '@/lib/services/orders';
 import { updateUserPhone } from '@/lib/services/users';
 import { Order, OrderItem } from '@/types';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 import { formatPrice } from '@/lib/utils';
 
@@ -27,9 +29,12 @@ export default function CheckoutPage() {
         locality: '',
         postalCode: '',
         orderNotes: '',
+        deliveryTimeSlot: '',
         paymentMethod: 'mercado_pago' as 'mercado_pago' | 'transfer' | 'cash',
         deliveryMethod: 'delivery' as 'delivery' | 'pickup'
     });
+
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     const isOrderPlaced = React.useRef(false);
 
@@ -62,6 +67,41 @@ export default function CheckoutPage() {
             }));
         }
     }, [user]);
+
+    // Helper function to check if a time slot is available (at least 2 hours from now)
+    const isTimeSlotAvailable = (timeSlot: string, selectedDate: Date | null): boolean => {
+        if (!selectedDate) return true; // If no date selected, show all slots
+
+        const now = new Date();
+        const selectedDateOnly = new Date(selectedDate);
+        selectedDateOnly.setHours(0, 0, 0, 0);
+        const todayOnly = new Date(now);
+        todayOnly.setHours(0, 0, 0, 0);
+
+        // If selected date is in the future, all slots are available
+        if (selectedDateOnly > todayOnly) return true;
+
+        // If selected date is today, check if slot is at least 2 hours from now
+        const [startTime] = timeSlot.split(' - ');
+        const [hours, minutes] = startTime.split(':').map(Number);
+
+        const slotDateTime = new Date(selectedDate);
+        slotDateTime.setHours(hours, minutes, 0, 0);
+
+        const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+        return slotDateTime >= twoHoursFromNow;
+    };
+
+    // Clear time slot if it becomes unavailable when date changes
+    useEffect(() => {
+        if (formData.deliveryTimeSlot && !isTimeSlotAvailable(formData.deliveryTimeSlot, selectedDate)) {
+            setFormData(prev => ({
+                ...prev,
+                deliveryTimeSlot: ''
+            }));
+        }
+    }, [selectedDate, formData.deliveryTimeSlot]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -110,7 +150,9 @@ export default function CheckoutPage() {
                             ...formData,
                             email: user.email,
                             id: user.uid
-                        }
+                        },
+                        deliveryTimeSlot: formData.deliveryTimeSlot,
+                        deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : ''
                     })
                 });
 
@@ -143,6 +185,8 @@ export default function CheckoutPage() {
                 customerName: `${formData.firstName} ${formData.lastName}`.trim(),
                 customerPhone: formData.phone,
                 orderNotes: formData.orderNotes, // Pass to order creation
+                deliveryTimeSlot: formData.deliveryTimeSlot,
+                deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
                 createdAt: Date.now()
             };
 
@@ -232,6 +276,96 @@ export default function CheckoutPage() {
                                     </div>
                                 </label>
                             </div>
+                        </div>
+
+                        {/* Date and Time Selection */}
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="material-symbols-outlined text-primary text-2xl">event</span>
+                                <h2 className="text-xl font-bold text-slate-900">
+                                    {formData.deliveryMethod === 'pickup' ? 'Fecha y Horario de Retiro' : 'Fecha y Horario de Entrega'}
+                                </h2>
+                            </div>
+                            <p className="text-sm text-slate-600 mb-4">
+                                {formData.deliveryMethod === 'pickup'
+                                    ? 'Selecciona cuándo prefieres pasar a retirar tu pedido'
+                                    : 'Selecciona cuándo prefieres recibir tu pedido'}
+                            </p>
+
+                            {/* Date Selection */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    {formData.deliveryMethod === 'pickup' ? 'Fecha de Retiro' : 'Fecha Preferida'}
+                                </label>
+                                <div className="relative">
+                                    <DatePicker
+                                        selected={selectedDate}
+                                        onChange={(date: Date | null) => setSelectedDate(date)}
+                                        minDate={new Date()}
+                                        dateFormat="dd/MM/yyyy"
+                                        placeholderText="Selecciona una fecha"
+                                        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                        wrapperClassName="w-full"
+                                    />
+                                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
+                                        calendar_today
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Time Slot Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    {formData.deliveryMethod === 'pickup' ? 'Horario de Retiro' : 'Rango Horario'}
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {[
+                                        '09:00 - 11:00',
+                                        '11:00 - 13:00',
+                                        '13:00 - 15:00',
+                                        '15:00 - 17:00',
+                                        '17:00 - 19:00'
+                                    ].map((timeSlot) => {
+                                        const isAvailable = isTimeSlotAvailable(timeSlot, selectedDate);
+                                        const isSelected = formData.deliveryTimeSlot === timeSlot;
+
+                                        return (
+                                            <label
+                                                key={timeSlot}
+                                                className={`flex items-center justify-center gap-2 p-4 rounded-xl border cursor-pointer transition-all ${!isAvailable
+                                                    ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                                                    : isSelected
+                                                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="deliveryTimeSlot"
+                                                    value={timeSlot}
+                                                    checked={isSelected}
+                                                    onChange={handleInputChange}
+                                                    disabled={!isAvailable}
+                                                    className="sr-only"
+                                                />
+                                                <span className={`material-symbols-outlined text-xl ${!isAvailable ? 'text-gray-400' : 'text-primary'}`}>
+                                                    {!isAvailable ? 'block' : 'access_time'}
+                                                </span>
+                                                <span className={`font-bold ${!isAvailable ? 'text-gray-400' : 'text-slate-900'}`}>
+                                                    {timeSlot}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-sm">info</span>
+                                {formData.deliveryMethod === 'pickup'
+                                    ? 'Los pedidos deben solicitarse con al menos 2 horas de anticipación al horario de retiro'
+                                    : 'Los pedidos deben hacerse con al menos 2 horas de anticipación'}
+                            </p>
                         </div>
 
                         {/* 1. User Info (Always visible) */}

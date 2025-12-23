@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { getProducts } from '@/lib/services/products';
 import { createOrder } from '@/lib/services/orders';
 import { Product, OrderItem } from '@/types';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const NewOrderPage: React.FC = () => {
     const router = useRouter();
@@ -23,8 +25,11 @@ const NewOrderPage: React.FC = () => {
         street: '',
         city: '',
         zip: '',
-        deliveryMethod: 'delivery' // 'delivery' | 'pickup'
+        deliveryMethod: 'delivery', // 'delivery' | 'pickup'
+        deliveryTimeSlot: '' // Time slot preference
     });
+
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -71,7 +76,7 @@ const NewOrderPage: React.FC = () => {
 
     const calculateTotal = () => selectedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -94,6 +99,8 @@ const NewOrderPage: React.FC = () => {
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
                 deliveryMethod: formData.deliveryMethod as 'delivery' | 'pickup',
+                deliveryTimeSlot: formData.deliveryTimeSlot,
+                deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
                 createdAt: Date.now()
             };
 
@@ -246,6 +253,43 @@ const NewOrderPage: React.FC = () => {
                                         <span className="text-sm font-medium text-slate-900">Retiro en Local</span>
                                     </label>
                                 </div>
+                            </div>
+
+                            {/* Date Selection */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-slate-700">Fecha de Entrega Preferida</label>
+                                <div className="relative">
+                                    <DatePicker
+                                        selected={selectedDate}
+                                        onChange={(date: Date | null) => setSelectedDate(date)}
+                                        minDate={new Date()}
+                                        dateFormat="dd/MM/yyyy"
+                                        placeholderText="Selecciona una fecha"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                        wrapperClassName="w-full"
+                                    />
+                                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">
+                                        calendar_today
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Time Slot Selection */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-slate-700">Rango Horario Preferido</label>
+                                <select
+                                    name="deliveryTimeSlot"
+                                    value={formData.deliveryTimeSlot}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                >
+                                    <option value="">Seleccionar horario...</option>
+                                    <option value="09:00 - 11:00">09:00 - 11:00</option>
+                                    <option value="11:00 - 13:00">11:00 - 13:00</option>
+                                    <option value="13:00 - 15:00">13:00 - 15:00</option>
+                                    <option value="15:00 - 17:00">15:00 - 17:00</option>
+                                    <option value="17:00 - 19:00">17:00 - 19:00</option>
+                                </select>
                             </div>
 
                             {/* Address Fields (Conditional) */}

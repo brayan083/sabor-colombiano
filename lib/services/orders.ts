@@ -154,3 +154,73 @@ export const updateOrderPayment = async (
         throw error;
     }
 };
+
+// Assign driver to order
+export const assignDriverToOrder = async (
+    orderId: string,
+    driverId: string,
+    driverName: string
+): Promise<void> => {
+    try {
+        const docRef = doc(db, COLLECTION_NAME, orderId);
+        await updateDoc(docRef, {
+            assignedDriverId: driverId,
+            assignedDriverName: driverName,
+            deliveryStatus: 'assigned'
+        });
+    } catch (error) {
+        console.error("Error assigning driver to order:", error);
+        throw error;
+    }
+};
+
+// Update delivery status
+export const updateDeliveryStatus = async (
+    orderId: string,
+    status: 'pending' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'failed'
+): Promise<void> => {
+    try {
+        const docRef = doc(db, COLLECTION_NAME, orderId);
+        await updateDoc(docRef, { deliveryStatus: status });
+    } catch (error) {
+        console.error("Error updating delivery status:", error);
+        throw error;
+    }
+};
+
+// Get orders by driver
+export const getOrdersByDriver = async (driverId: string): Promise<Order[]> => {
+    try {
+        console.log('getOrdersByDriver called with driverId:', driverId);
+        const q = query(
+            collection(db, COLLECTION_NAME),
+            where("assignedDriverId", "==", driverId),
+            orderBy("createdAt", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        const orders = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Order));
+        console.log('Found orders for driver:', orders.length, orders);
+        return orders;
+    } catch (error) {
+        console.error("Error fetching orders by driver:", error);
+        return [];
+    }
+};
+
+// Unassign driver from order
+export const unassignDriverFromOrder = async (orderId: string): Promise<void> => {
+    try {
+        const docRef = doc(db, COLLECTION_NAME, orderId);
+        await updateDoc(docRef, {
+            assignedDriverId: null,
+            assignedDriverName: null,
+            deliveryStatus: 'pending'
+        });
+    } catch (error) {
+        console.error("Error unassigning driver from order:", error);
+        throw error;
+    }
+};

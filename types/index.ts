@@ -26,11 +26,24 @@ export interface User {
     uid: string;
     email: string;
     displayName: string;
-    role: 'admin' | 'customer';
+    role: 'admin' | 'customer' | 'driver'; // Added 'driver' role
     phoneNumber?: string;
     termsAccepted?: boolean;
     photoURL?: string | null;
     googlePhotoURL?: string | null; // Store original Google photo
+
+    // Driver-specific information (only present if role === 'driver')
+    driverInfo?: {
+        vehicleType: 'motorcycle' | 'bicycle' | 'car' | 'foot';
+        status: 'available' | 'busy' | 'offline';
+        stats: {
+            totalDeliveries: number;
+            completedToday: number;
+            averageRating: number;
+        };
+        isActive: boolean;
+    };
+
     createdAt: number;
 }
 
@@ -59,6 +72,11 @@ export interface Order {
     customerName: string;
     customerPhone?: string;
     orderNotes?: string; // Optional message from user
+    deliveryTimeSlot?: string; // Preferred delivery time range (e.g., "11:00 - 13:00")
+    deliveryDate?: string; // Preferred delivery date (ISO format: YYYY-MM-DD)
+    assignedDriverId?: string; // UID of user with driver role
+    assignedDriverName?: string; // Name of assigned delivery driver
+    deliveryStatus?: 'pending' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'failed';
     mercadoPagoPaymentId?: string; // Mercado Pago payment ID
     mercadoPagoStatus?: string; // Mercado Pago payment status
     createdAt: number;

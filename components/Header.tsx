@@ -102,6 +102,12 @@ const Header: React.FC = () => {
                                                 Panel Admin
                                             </Link>
                                         )}
+                                        {user.role === 'driver' && (
+                                            <Link href="/driver" className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors" onClick={() => setIsDropdownOpen(false)}>
+                                                <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                                                Mis Entregas
+                                            </Link>
+                                        )}
                                         <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors" onClick={() => setIsDropdownOpen(false)}>
                                             <span className="material-symbols-outlined text-[20px]">person</span>
                                             Mi Perfil

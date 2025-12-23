@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getUsers } from '@/lib/services/users';
 import { getOrders } from '@/lib/services/orders';
+import { promoteToDriver } from '@/lib/services/drivers';
 import { User, Order } from '@/types';
 
 interface UserWithStats extends User {
@@ -15,8 +17,11 @@ interface UserWithStats extends User {
 }
 
 const AdminCustomers: React.FC = () => {
+    const router = useRouter();
     const [users, setUsers] = useState<UserWithStats[]>([]);
     const [loading, setLoading] = useState(true);
+    const [roleFilter, setRoleFilter] = useState<'all' | 'customer' | 'driver' | 'admin'>('all');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const colors = [
         'bg-blue-100 text-blue-600',
@@ -35,13 +40,13 @@ const AdminCustomers: React.FC = () => {
                     getOrders()
                 ]);
 
-                // Filter only customers if needed, or show all
-                const customers = usersData; // .filter(u => u.role === 'customer');
+                // Show all users
+                const customers = usersData;
 
                 const usersWithStats = customers.map((user, index) => {
                     const userOrders = ordersData.filter(o => o.userId === user.uid);
                     const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
-                    
+
                     // Determine status based on orders
                     let status = 'Nuevo';
                     if (userOrders.length > 0) status = 'Activo';
@@ -49,8 +54,8 @@ const AdminCustomers: React.FC = () => {
 
                     // Get initials
                     const names = (user.displayName || 'Usuario').split(' ');
-                    const initial = names.length > 1 
-                        ? `${names[0][0]}${names[1][0]}`.toUpperCase() 
+                    const initial = names.length > 1
+                        ? `${names[0][0]}${names[1][0]}`.toUpperCase()
                         : (names[0][0] || 'U').toUpperCase();
 
                     return {
@@ -74,6 +79,37 @@ const AdminCustomers: React.FC = () => {
         fetchData();
     }, []);
 
+    const handlePromoteToDriver = async (userId: string, userName: string) => {
+        if (!confirm(`¿Promover a ${userName} como repartidor?`)) return;
+
+        try {
+            await promoteToDriver(userId, 'motorcycle'); // Default vehicle
+            alert(`${userName} ahora es repartidor`);
+            // Reload data
+            window.location.reload();
+        } catch (error) {
+            console.error('Error promoting to driver:', error);
+            alert('Error al promover el usuario');
+        }
+    };
+
+    const filteredUsers = users.filter(user => {
+        // Role filter
+        if (roleFilter !== 'all' && user.role !== roleFilter) return false;
+
+        // Search filter
+        if (searchTerm) {
+            const search = searchTerm.toLowerCase();
+            return (
+                user.displayName?.toLowerCase().includes(search) ||
+                user.email.toLowerCase().includes(search) ||
+                user.phoneNumber?.includes(search)
+            );
+        }
+
+        return true;
+    });
+
     return (
         <div className="flex flex-col gap-8">
             <div className="flex flex-wrap justify-between items-center gap-4">
@@ -84,48 +120,55 @@ const AdminCustomers: React.FC = () => {
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                 {/* ... search and filters ... */}
                 <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                   <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                             <span className="material-symbols-outlined text-[20px]">search</span>
-                        </span>
-                        <input className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-admin focus:border-transparent min-w-[300px]" placeholder="Buscar clientes..." />
-                   </div>
-                   <div className="flex gap-2">
-                       <button className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-slate-600 hover:bg-gray-50 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                            Filtros
-                       </button>
-                       <button className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-slate-600 hover:bg-gray-50 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[18px]">file_download</span>
-                            Exportar
-                       </button>
-                   </div>
+                    <div className="flex gap-4 items-center">
+                        <div className="relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                <span className="material-symbols-outlined text-[20px]">search</span>
+                            </span>
+                            <input
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-admin focus:border-transparent min-w-[300px]"
+                                placeholder="Buscar por nombre, email o teléfono..."
+                            />
+                        </div>
+                        <select
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value as any)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-admin"
+                        >
+                            <option value="all">Todos los roles</option>
+                            <option value="customer">Clientes</option>
+                            <option value="driver">Repartidores</option>
+                            <option value="admin">Administradores</option>
+                        </select>
+                    </div>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-500">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3">Cliente</th>
+                                <th className="px-6 py-3">Usuario</th>
                                 <th className="px-6 py-3">Email</th>
+                                <th className="px-6 py-3">Rol</th>
                                 <th className="px-6 py-3">Teléfono</th>
                                 <th className="px-6 py-3">Pedidos</th>
                                 <th className="px-6 py-3">Total Gastado</th>
-                                <th className="px-6 py-3">Estado</th>
                                 <th className="px-6 py-3 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-4 text-center">Cargando clientes...</td>
+                                    <td colSpan={7} className="px-6 py-4 text-center">Cargando usuarios...</td>
                                 </tr>
-                            ) : users.length === 0 ? (
+                            ) : filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-4 text-center">No se encontraron clientes.</td>
+                                    <td colSpan={7} className="px-6 py-4 text-center">No se encontraron usuarios.</td>
                                 </tr>
                             ) : (
-                                users.map((customer) => (
+                                filteredUsers.map((customer) => (
                                     <tr key={customer.uid} className="bg-white border-b hover:bg-gray-50">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-4">
@@ -136,26 +179,40 @@ const AdminCustomers: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">{customer.email}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${customer.role === 'admin' ? 'bg-red-100 text-red-800' :
+                                                    customer.role === 'driver' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                {customer.role === 'admin' ? 'Admin' : customer.role === 'driver' ? 'Repartidor' : 'Cliente'}
+                                            </span>
+                                        </td>
                                         <td className="px-6 py-4">{customer.phoneNumber || 'N/A'}</td>
                                         <td className="px-6 py-4">{customer.orderCount}</td>
                                         <td className="px-6 py-4 font-medium text-slate-900">${customer.totalSpent.toLocaleString()}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                customer.status === 'Activo' || customer.status === 'VIP' ? 'bg-green-100 text-green-800' :
-                                                customer.status === 'Nuevo' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-gray-100 text-gray-800'
-                                            }`}>
-                                                {customer.status}
-                                            </span>
-                                        </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Link href={`/admin/customers/${customer.uid}`} className="text-slate-400 hover:text-primary-admin" title="Ver Perfil">
                                                     <span className="material-symbols-outlined text-[20px]">visibility</span>
                                                 </Link>
-                                                {/* <button className="text-slate-400 hover:text-primary-admin" title="Enviar Mensaje">
-                                                    <span className="material-symbols-outlined text-[20px]">mail</span>
-                                                </button> */}
+                                                {customer.role === 'customer' && (
+                                                    <button
+                                                        onClick={() => handlePromoteToDriver(customer.uid, customer.displayName || 'Usuario')}
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                        title="Promover a Repartidor"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                                                    </button>
+                                                )}
+                                                {customer.role === 'driver' && (
+                                                    <button
+                                                        onClick={() => router.push(`/admin/drivers/${customer.uid}`)}
+                                                        className="text-green-600 hover:text-green-800"
+                                                        title="Ver como Repartidor"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">badge</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -164,10 +221,10 @@ const AdminCustomers: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-                
+
                 {!loading && users.length > 0 && (
                     <div className="p-4 border-t border-gray-200 flex items-center justify-between">
-                        <span className="text-sm text-slate-500">Mostrando {users.length} clientes</span>
+                        <span className="text-sm text-slate-500">Mostrando {filteredUsers.length} de {users.length} usuarios</span>
                         <div className="flex gap-1">
                             <button className="px-3 py-1 border border-gray-300 rounded-md text-sm text-slate-600 disabled:opacity-50" disabled>Anterior</button>
                             <button className="px-3 py-1 border border-gray-300 rounded-md text-sm text-slate-600 hover:bg-gray-50">Siguiente</button>

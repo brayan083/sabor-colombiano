@@ -113,6 +113,8 @@ export async function POST(req: NextRequest) {
                     customerName: metadata.customer_name || 'Cliente',
                     customerPhone: metadata.customer_phone || '',
                     orderNotes: metadata.order_notes || `Pago procesado por Mercado Pago. Payment ID: ${paymentId}`,
+                    deliveryTimeSlot: metadata.delivery_time_slot || '',
+                    deliveryDate: metadata.delivery_date || '',
                     createdAt: Date.now(),
                     mercadoPagoPaymentId: paymentId,
                     mercadoPagoStatus: payment.status

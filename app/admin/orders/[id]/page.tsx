@@ -4,30 +4,42 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { getOrderById, updateOrderStatus } from '@/lib/services/orders';
-import { Order } from '@/types';
+import { getOrderById, updateOrderStatus, updateDeliveryStatus, assignDriverToOrder, unassignDriverFromOrder } from '@/lib/services/orders';
+import { getDriverById } from '@/lib/services/drivers';
+import { Order, User } from '@/types';
+import DriverSelector from '@/components/admin/DriverSelector';
+import DriverStatusBadge from '@/components/admin/DriverStatusBadge';
 
 const OrderDetailPage: React.FC = () => {
     const params = useParams();
     const id = params.id as string;
     const [order, setOrder] = useState<Order | null>(null);
+    const [assignedDriver, setAssignedDriver] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [showDriverSelector, setShowDriverSelector] = useState(false);
 
     useEffect(() => {
-        const fetchOrder = async () => {
-            if (!id) return;
-            try {
-                const data = await getOrderById(id);
-                setOrder(data);
-            } catch (error) {
-                console.error("Error fetching order:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchOrder();
     }, [id]);
+
+    const fetchOrder = async () => {
+        if (!id) return;
+        try {
+            const data = await getOrderById(id);
+            setOrder(data);
+
+            // Load driver info if assigned
+            if (data && data.assignedDriverId) {
+                const driver = await getDriverById(data.assignedDriverId);
+                setAssignedDriver(driver);
+            }
+        } catch (error) {
+            console.error("Error fetching order:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleStatusChange = async (newStatus: Order['status']) => {
         if (!order) return;
@@ -43,11 +55,92 @@ const OrderDetailPage: React.FC = () => {
         }
     };
 
+    const handleDeliveryStatusChange = async (newStatus: Order['deliveryStatus']) => {
+        if (!order || !newStatus) return;
+        setUpdating(true);
+        try {
+            await updateDeliveryStatus(order.id, newStatus);
+            setOrder({ ...order, deliveryStatus: newStatus });
+        } catch (error) {
+            console.error("Error updating delivery status:", error);
+            alert("Error al actualizar el estado de entrega");
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleDriverSelect = async (driver: User) => {
+        if (!order) return;
+        try {
+            await assignDriverToOrder(order.id, driver.uid, driver.displayName);
+            setShowDriverSelector(false);
+            await fetchOrder();
+            alert(`Repartidor ${driver.displayName} asignado exitosamente`);
+        } catch (error) {
+            console.error("Error assigning driver:", error);
+            alert('Error al asignar el repartidor');
+        }
+    };
+
+    const handleUnassignDriver = async () => {
+        if (!order || !confirm('¿Desasignar repartidor de este pedido?')) return;
+        try {
+            await unassignDriverFromOrder(order.id);
+            setAssignedDriver(null);
+            await fetchOrder();
+            alert('Repartidor desasignado exitosamente');
+        } catch (error) {
+            console.error("Error unassigning driver:", error);
+            alert('Error al desasignar el repartidor');
+        }
+    };
+
+    const getVehicleIcon = (vehicleType?: string) => {
+        switch (vehicleType) {
+            case 'motorcycle': return '🏍️';
+            case 'bicycle': return '🚲';
+            case 'car': return '🚗';
+            case 'foot': return '🚶';
+            default: return '🚚';
+        }
+    };
+
+    const getDeliveryStatusConfig = (status?: string) => {
+        const configs = {
+            pending: { label: 'Sin asignar', color: 'text-gray-600', icon: 'schedule' },
+            assigned: { label: 'Asignado', color: 'text-blue-600', icon: 'assignment' },
+            picked_up: { label: 'Recogido', color: 'text-purple-600', icon: 'shopping_bag' },
+            in_transit: { label: 'En tránsito', color: 'text-yellow-600', icon: 'local_shipping' },
+            delivered: { label: 'Entregado', color: 'text-green-600', icon: 'check_circle' },
+            failed: { label: 'Fallido', color: 'text-red-600', icon: 'error' }
+        };
+        return configs[status as keyof typeof configs] || configs.pending;
+    };
+
+    const deliverySteps = [
+        { status: 'pending', label: 'Sin asignar' },
+        { status: 'assigned', label: 'Asignado' },
+        { status: 'picked_up', label: 'Recogido' },
+        { status: 'in_transit', label: 'En tránsito' },
+        { status: 'delivered', label: 'Entregado' }
+    ];
+
+    const getStepStatus = (stepStatus: string) => {
+        if (!order?.deliveryStatus) return 'pending';
+        const currentIndex = deliverySteps.findIndex(s => s.status === order.deliveryStatus);
+        const stepIndex = deliverySteps.findIndex(s => s.status === stepStatus);
+
+        if (order.deliveryStatus === 'failed') return 'failed';
+        if (stepIndex < currentIndex) return 'completed';
+        if (stepIndex === currentIndex) return 'current';
+        return 'pending';
+    };
+
     if (loading) return <div className="p-8 text-center bg-transparent">Cargando pedido...</div>;
     if (!order) return <div className="p-8 text-center">Pedido no encontrado</div>;
 
     return (
-        <div className="flex flex-col gap-8 max-w-5xl mx-auto">
+        <div className="flex flex-col gap-8 max-w-6xl mx-auto">
             <div className="flex flex-wrap justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
                     <Link href="/admin/orders" className="p-2 rounded-lg hover:bg-black/5 text-slate-500">
@@ -56,27 +149,25 @@ const OrderDetailPage: React.FC = () => {
                     <div>
                         <p className="text-slate-900 text-2xl font-bold">Pedido #{order.id.slice(0, 8)}</p>
                         <p className="text-slate-500 text-sm">{new Date(order.createdAt).toLocaleString()}</p>
-                        <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium w-fit ${
-                            order.status === 'paid' || order.status === 'shipped' ? 'bg-green-100 text-green-800' :
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                            'bg-red-100 text-red-800'
-                        }`}>
-                            <span className={`size-2 rounded-full ${
-                                order.status === 'paid' || order.status === 'shipped' ? 'bg-green-500' :
-                                order.status === 'pending' ? 'bg-yellow-500' : 
-                                'bg-red-500'
-                            }`}></span>
+                        <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium w-fit ${order.status === 'paid' || order.status === 'shipped' ? 'bg-green-100 text-green-800' :
+                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                            }`}>
+                            <span className={`size-2 rounded-full ${order.status === 'paid' || order.status === 'shipped' ? 'bg-green-500' :
+                                order.status === 'pending' ? 'bg-yellow-500' :
+                                    'bg-red-500'
+                                }`}></span>
                             Status: {
                                 order.status === 'pending' ? 'Pendiente' :
-                                order.status === 'paid' ? 'Pagado' :
-                                order.status === 'shipped' ? 'Enviado' : 'Cancelado'
+                                    order.status === 'paid' ? 'Pagado' :
+                                        order.status === 'shipped' ? 'Enviado' : 'Cancelado'
                             }
                         </div>
                     </div>
                 </div>
                 <div className="flex gap-2 items-center bg-white p-2 rounded-lg shadow-sm border border-gray-200">
                     <span className="text-sm font-medium text-slate-700 ml-2">Estado:</span>
-                    <select 
+                    <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(e.target.value as Order['status'])}
                         disabled={updating}
@@ -90,7 +181,7 @@ const OrderDetailPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Order Items */}
                 <div className="lg:col-span-2 flex flex-col gap-6">
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
@@ -102,10 +193,10 @@ const OrderDetailPage: React.FC = () => {
                                 <div key={index} className="p-4 flex gap-4 items-center">
                                     <div className="relative h-20 w-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
                                         {item.image && (
-                                            <Image 
+                                            <Image
                                                 fill
-                                                src={item.image} 
-                                                alt={item.name} 
+                                                src={item.image}
+                                                alt={item.name}
                                                 className="object-cover"
                                             />
                                         )}
@@ -127,37 +218,221 @@ const OrderDetailPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Customer Info */}
+                {/* Right Column */}
                 <div className="flex flex-col gap-6">
+                    {/* Driver Section */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                         <div className="p-4 border-b border-gray-200 bg-gray-50">
-                            <h3 className="font-bold text-slate-900">Dirección de Envío</h3>
+                            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                                Repartidor
+                            </h3>
                         </div>
-                        <div className="p-4 text-sm text-slate-700 space-y-2">
-                             {order.shippingAddress ? (
-                                <>
-                                    <p><span className="font-medium">Calle:</span> {order.shippingAddress.street}</p>
-                                    <p><span className="font-medium">Ciudad:</span> {order.shippingAddress.city}</p>
+                        <div className="p-4">
+                            {assignedDriver ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-3xl">
+                                            {getVehicleIcon(assignedDriver.driverInfo?.vehicleType)}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-slate-900">{assignedDriver.displayName}</p>
+                                            <DriverStatusBadge status={assignedDriver.driverInfo?.status || 'offline'} size="sm" />
+                                        </div>
+                                    </div>
 
-                                    <p><span className="font-medium">CP:</span> {order.shippingAddress.zip}</p>
-                                </>
-                             ) : (
-                                 <p className="italic text-slate-400">No hay información de envío.</p>
-                             )}
+                                    {assignedDriver.phoneNumber && (
+                                        <a href={`tel:${assignedDriver.phoneNumber}`} className="flex items-center gap-2 text-primary hover:underline">
+                                            <span className="material-symbols-outlined text-sm">phone</span>
+                                            <span className="text-sm">{assignedDriver.phoneNumber}</span>
+                                        </a>
+                                    )}
+
+                                    <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 rounded-lg">
+                                        <div className="text-center">
+                                            <div className="text-xs text-gray-600">Hoy</div>
+                                            <div className="font-bold text-primary">{assignedDriver.driverInfo?.stats.completedToday || 0}</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-xs text-gray-600">Total</div>
+                                            <div className="font-bold text-slate-900">{assignedDriver.driverInfo?.stats.totalDeliveries || 0}</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-xs text-gray-600">Rating</div>
+                                            <div className="font-bold text-yellow-600">
+                                                {assignedDriver.driverInfo?.stats.averageRating && assignedDriver.driverInfo.stats.averageRating > 0
+                                                    ? assignedDriver.driverInfo.stats.averageRating.toFixed(1)
+                                                    : '-'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setShowDriverSelector(true)}
+                                            className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                        >
+                                            Cambiar
+                                        </button>
+                                        <button
+                                            onClick={handleUnassignDriver}
+                                            className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                        >
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-3">person_off</span>
+                                    <p className="text-sm text-gray-500 mb-4">Sin repartidor asignado</p>
+                                    <button
+                                        onClick={() => setShowDriverSelector(true)}
+                                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+                                    >
+                                        Asignar Repartidor
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
+                    {/* Delivery Info */}
+                    {order.deliveryMethod === 'delivery' && (
+                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                            <div className="p-4 border-b border-gray-200 bg-gray-50">
+                                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[20px]">location_on</span>
+                                    Información de Entrega
+                                </h3>
+                            </div>
+                            <div className="p-4 space-y-3 text-sm">
+                                <div>
+                                    <span className="font-medium text-gray-600">Método:</span>
+                                    <span className="ml-2 text-slate-900">Envío a Domicilio</span>
+                                </div>
+                                {order.deliveryDate && (
+                                    <div>
+                                        <span className="font-medium text-gray-600">Fecha:</span>
+                                        <span className="ml-2 text-slate-900">{new Date(order.deliveryDate).toLocaleDateString()}</span>
+                                    </div>
+                                )}
+                                {order.deliveryTimeSlot && (
+                                    <div>
+                                        <span className="font-medium text-gray-600">Horario:</span>
+                                        <span className="ml-2 text-slate-900">{order.deliveryTimeSlot}</span>
+                                    </div>
+                                )}
+                                {order.shippingAddress && (
+                                    <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.shippingAddress.street}, ${order.shippingAddress.city}`)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 text-primary hover:underline mt-3"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">map</span>
+                                        Ver en Google Maps
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delivery Timeline */}
+                    {order.assignedDriverId && (
+                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                            <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[20px]">timeline</span>
+                                    Estado de Entrega
+                                </h3>
+                                {order.deliveryStatus !== 'delivered' && order.deliveryStatus !== 'failed' && (
+                                    <select
+                                        value={order.deliveryStatus || 'pending'}
+                                        onChange={(e) => handleDeliveryStatusChange(e.target.value as Order['deliveryStatus'])}
+                                        disabled={updating}
+                                        className="text-xs bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-admin focus:border-primary-admin p-1.5"
+                                    >
+                                        <option value="pending">Sin asignar</option>
+                                        <option value="assigned">Asignado</option>
+                                        <option value="picked_up">Recogido</option>
+                                        <option value="in_transit">En tránsito</option>
+                                        <option value="delivered">Entregado</option>
+                                        <option value="failed">Fallido</option>
+                                    </select>
+                                )}
+                            </div>
+                            <div className="p-4">
+                                <div className="space-y-3">
+                                    {deliverySteps.map((step, index) => {
+                                        const stepState = getStepStatus(step.status);
+                                        const config = getDeliveryStatusConfig(step.status);
+
+                                        return (
+                                            <div key={step.status} className="flex items-center gap-3">
+                                                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${stepState === 'completed' ? 'bg-green-500 border-green-500' :
+                                                    stepState === 'current' ? 'bg-primary border-primary' :
+                                                        stepState === 'failed' ? 'bg-red-500 border-red-500' :
+                                                            'bg-white border-gray-300'
+                                                    }`}>
+                                                    {stepState === 'completed' || stepState === 'current' ? (
+                                                        <span className="material-symbols-outlined text-white text-[16px]">
+                                                            {stepState === 'completed' ? 'check' : config.icon}
+                                                        </span>
+                                                    ) : (
+                                                        <span className={`w-2 h-2 rounded-full bg-gray-300`}></span>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className={`text-sm font-medium ${stepState === 'completed' ? 'text-green-600' :
+                                                        stepState === 'current' ? 'text-primary' :
+                                                            'text-gray-400'
+                                                        }`}>
+                                                        {step.label}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {order.deliveryStatus === 'failed' && (
+                                        <div className="flex items-center gap-3 mt-2 p-3 bg-red-50 rounded-lg">
+                                            <span className="material-symbols-outlined text-red-600">error</span>
+                                            <p className="text-sm font-medium text-red-600">Entrega Fallida</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Shipping Address */}
+                    {order.shippingAddress && (
+                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                            <div className="p-4 border-b border-gray-200 bg-gray-50">
+                                <h3 className="font-bold text-slate-900">Dirección de Envío</h3>
+                            </div>
+                            <div className="p-4 text-sm text-slate-700 space-y-2">
+                                <p><span className="font-medium">Calle:</span> {order.shippingAddress.street}</p>
+                                <p><span className="font-medium">Ciudad:</span> {order.shippingAddress.city}</p>
+                                <p><span className="font-medium">CP:</span> {order.shippingAddress.zip}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Customer Info */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                         <div className="p-4 border-b border-gray-200 bg-gray-50">
                             <h3 className="font-bold text-slate-900">Cliente</h3>
                         </div>
                         <div className="p-4 text-sm text-slate-700 space-y-2">
-                             <p><span className="font-medium">Nombre:</span> {order.customerName}</p>
-                             {order.customerPhone && <p><span className="font-medium">Teléfono:</span> {order.customerPhone}</p>}
-                             <p className="text-xs text-slate-400 mt-2">ID Usuario: {order.userId}</p>
+                            <p><span className="font-medium">Nombre:</span> {order.customerName}</p>
+                            {order.customerPhone && <p><span className="font-medium">Teléfono:</span> {order.customerPhone}</p>}
+                            <p className="text-xs text-slate-400 mt-2">ID Usuario: {order.userId}</p>
                         </div>
                     </div>
 
+                    {/* Order Notes */}
                     {order.orderNotes && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-xl overflow-hidden shadow-sm">
                             <div className="p-4 border-b border-yellow-200 bg-yellow-100">
@@ -173,6 +448,14 @@ const OrderDetailPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Driver Selector Modal */}
+            <DriverSelector
+                isOpen={showDriverSelector}
+                onClose={() => setShowDriverSelector(false)}
+                onSelect={handleDriverSelect}
+                orderId={order.id}
+            />
         </div>
     );
 };
