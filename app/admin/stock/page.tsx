@@ -33,9 +33,9 @@ const AdminStockPage: React.FC = () => {
 
     const handleStockUpdate = async (productId: string, newStock: number) => {
         if (newStock < 0) return;
-        
+
         // Optimistic update
-        setProducts(prev => prev.map(p => 
+        setProducts(prev => prev.map(p =>
             p.id === productId ? { ...p, stock: newStock } : p
         ));
 
@@ -54,7 +54,7 @@ const AdminStockPage: React.FC = () => {
         return cat ? cat.name : 'Sin Categoría';
     };
 
-    const filteredProducts = products.filter(product => 
+    const filteredProducts = products.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -68,9 +68,9 @@ const AdminStockPage: React.FC = () => {
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
                 <div className="relative flex-1">
                     <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400">search</span>
-                    <input 
-                        type="text" 
-                        placeholder="Buscar producto..." 
+                    <input
+                        type="text"
+                        placeholder="Buscar producto..."
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-admin"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -83,15 +83,15 @@ const AdminStockPage: React.FC = () => {
             ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-10 text-slate-500">No se encontraron productos.</div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                     {filteredProducts.map((product) => (
                         <div key={product.id} className={`bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col ${product.isArchived ? 'opacity-70 grayscale-[0.5] border-gray-200' : 'border-gray-200'}`}>
                             <div className="relative aspect-video w-full bg-gray-100">
                                 {product.image ? (
-                                    <Image 
-                                        src={product.image} 
-                                        alt={product.name} 
-                                        fill 
+                                    <Image
+                                        src={product.image}
+                                        alt={product.name}
+                                        fill
                                         className="object-cover"
                                     />
                                 ) : (
@@ -119,17 +119,17 @@ const AdminStockPage: React.FC = () => {
                                         {product.name}
                                     </h3>
                                 </div>
-                                
+
                                 <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                                     <div className="flex flex-col w-20">
                                         <span className="text-xs text-slate-500 font-medium mb-1">Stock</span>
-                                        <input 
+                                        <input
                                             type="number"
                                             value={product.stock}
                                             onChange={(e) => {
                                                 const val = parseInt(e.target.value) || 0;
                                                 // Update local state immediately for responsiveness
-                                                setProducts(prev => prev.map(p => 
+                                                setProducts(prev => prev.map(p =>
                                                     p.id === product.id ? { ...p, stock: val } : p
                                                 ));
                                             }}
@@ -142,16 +142,16 @@ const AdminStockPage: React.FC = () => {
                                             className={`w-full text-xl font-black bg-transparent border-b-2 border-transparent focus:border-primary-admin focus:outline-none transition-colors ${product.stock < 10 && product.stock > 0 ? 'text-orange-500' : product.stock === 0 ? 'text-red-600' : 'text-slate-900'}`}
                                         />
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
-                                        <button 
+                                        <button
                                             onClick={() => handleStockUpdate(product.id, product.stock - 1)}
                                             className="size-8 flex items-center justify-center rounded-md bg-white border border-gray-200 shadow-sm text-slate-600 hover:text-primary-admin hover:border-primary-admin active:scale-95 transition-all disabled:opacity-50"
                                             disabled={product.stock <= 0}
                                         >
                                             <span className="material-symbols-outlined text-[20px]">remove</span>
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleStockUpdate(product.id, product.stock + 1)}
                                             className="size-8 flex items-center justify-center rounded-md bg-white border border-gray-200 shadow-sm text-slate-600 hover:text-primary-admin hover:border-primary-admin active:scale-95 transition-all"
                                         >

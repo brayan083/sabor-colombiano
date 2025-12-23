@@ -14,11 +14,12 @@ const NewOrderPage: React.FC = () => {
     const [selectedItems, setSelectedItems] = useState<OrderItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    
+
     // Form Data
     const [formData, setFormData] = useState({
         customerName: '',
         customerEmail: '',
+        customerPhone: '',
         street: '',
         city: '',
         zip: '',
@@ -27,8 +28,8 @@ const NewOrderPage: React.FC = () => {
 
     useEffect(() => {
         const fetchProducts = async () => {
-             // ... existing fetch logic
-             try {
+            // ... existing fetch logic
+            try {
                 const data = await getProducts();
                 setProducts(data);
             } catch (error) {
@@ -45,8 +46,8 @@ const NewOrderPage: React.FC = () => {
         // ... existing addToOrder ...
         const existingItem = selectedItems.find(item => item.productId === product.id);
         if (existingItem) {
-            setSelectedItems(selectedItems.map(item => 
-                item.productId === product.id 
+            setSelectedItems(selectedItems.map(item =>
+                item.productId === product.id
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
             ));
@@ -62,7 +63,7 @@ const NewOrderPage: React.FC = () => {
     };
 
     const removeFromOrder = (productId: string) => setSelectedItems(selectedItems.filter(item => item.productId !== productId));
-    
+
     const updateQuantity = (productId: string, quantity: number) => {
         if (quantity < 1) return;
         setSelectedItems(selectedItems.map(item => item.productId === productId ? { ...item, quantity } : item));
@@ -91,12 +92,12 @@ const NewOrderPage: React.FC = () => {
                 status: 'pending' as const,
                 paymentMethod: 'cash' as const, // Default for manual orders
                 customerName: formData.customerName,
-                customerPhone: '', // Not collected in simplified form
+                customerPhone: formData.customerPhone,
                 deliveryMethod: formData.deliveryMethod as 'delivery' | 'pickup',
                 createdAt: Date.now()
             };
 
-            const newOrder = formData.deliveryMethod === 'delivery' 
+            const newOrder = formData.deliveryMethod === 'delivery'
                 ? {
                     ...baseOrder,
                     shippingAddress: {
@@ -119,17 +120,17 @@ const NewOrderPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto flex flex-col gap-8 h-[calc(100vh-100px)]">
-             <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col gap-8">
+            <div className="flex items-center gap-4">
                 <Link href="/admin/orders" className="p-2 rounded-lg hover:bg-black/5 text-slate-500">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <h1 className="text-2xl font-bold text-slate-900">Nuevo Pedido Manual</h1>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Product Selection */}
-                <div className="flex flex-col gap-4 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm h-full max-h-full">
+                <div className="flex flex-col gap-4 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm max-h-[400px] lg:max-h-[calc(100vh-200px)]">
                     <div className="p-4 border-b border-gray-200 bg-gray-50">
                         <h3 className="font-bold text-slate-900">1. Seleccionar Productos</h3>
                         <input className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-admin" placeholder="Buscar productos..." />
@@ -158,7 +159,7 @@ const NewOrderPage: React.FC = () => {
                 </div>
 
                 {/* Order Details & Checkout */}
-                <div className="flex flex-col gap-6 overflow-y-auto pr-2">
+                <div className="flex flex-col gap-6">
                     {/* Selected Items */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
                         <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between">
@@ -172,7 +173,7 @@ const NewOrderPage: React.FC = () => {
                                 <div key={item.productId} className="p-3 flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="relative h-10 w-10 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                                              {item.image && <Image fill src={item.image} alt={item.name} className="object-cover" />}
+                                            {item.image && <Image fill src={item.image} alt={item.name} className="object-cover" />}
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium text-slate-900 line-clamp-1">{item.name}</p>
@@ -195,44 +196,50 @@ const NewOrderPage: React.FC = () => {
                     </div>
 
                     {/* Customer Form */}
-                    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex-col flex">
+                    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
                         <div className="p-4 border-b border-gray-200 bg-gray-50">
                             <h3 className="font-bold text-slate-900">3. Datos del Cliente y Entrega</h3>
                         </div>
                         <div className="p-4 space-y-4">
-                             {/* Customer Info */}
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* Customer Info */}
+                            <div className="space-y-4">
                                 <div className="space-y-1">
                                     <label className="text-xs font-medium text-slate-700">Nombre Cliente</label>
                                     <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs font-medium text-slate-700">Email (Opcional)</label>
-                                    <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-slate-700">Teléfono</label>
+                                        <input type="tel" name="customerPhone" value={formData.customerPhone} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ej: +54 9 11 1234-5678" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-slate-700">Email (Opcional)</label>
+                                        <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                                    </div>
                                 </div>
                             </div>
-                            
+
                             {/* Delivery Method Toggle */}
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-slate-700">Método de Entrega</label>
                                 <div className="flex gap-4">
                                     <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.deliveryMethod === 'delivery' ? 'bg-primary-admin/5 border-primary-admin' : 'border-gray-200'}`}>
-                                        <input 
-                                            type="radio" 
-                                            name="deliveryMethod" 
-                                            value="delivery" 
-                                            checked={formData.deliveryMethod === 'delivery'} 
+                                        <input
+                                            type="radio"
+                                            name="deliveryMethod"
+                                            value="delivery"
+                                            checked={formData.deliveryMethod === 'delivery'}
                                             onChange={handleChange}
                                             className="text-primary-admin focus:ring-primary-admin"
                                         />
                                         <span className="text-sm font-medium text-slate-900">Domicilio</span>
                                     </label>
                                     <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.deliveryMethod === 'pickup' ? 'bg-primary-admin/5 border-primary-admin' : 'border-gray-200'}`}>
-                                        <input 
-                                            type="radio" 
-                                            name="deliveryMethod" 
-                                            value="pickup" 
-                                            checked={formData.deliveryMethod === 'pickup'} 
+                                        <input
+                                            type="radio"
+                                            name="deliveryMethod"
+                                            value="pickup"
+                                            checked={formData.deliveryMethod === 'pickup'}
                                             onChange={handleChange}
                                             className="text-primary-admin focus:ring-primary-admin"
                                         />
@@ -250,8 +257,8 @@ const NewOrderPage: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <label className="text-xs font-medium text-slate-700">Ciudad</label>
-                                            <input type="text" name="city" value={formData.city} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                                            <label className="text-xs font-medium text-slate-700">Localidad</label>
+                                            <input type="text" name="city" value={formData.city} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ej: Palermo, Recoleta" />
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-xs font-medium text-slate-700">Código Postal</label>
@@ -262,8 +269,8 @@ const NewOrderPage: React.FC = () => {
                             )}
                         </div>
                         <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={submitting || selectedItems.length === 0}
                                 className="px-6 py-2 bg-primary-admin text-white rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 w-full md:w-auto"
                             >
