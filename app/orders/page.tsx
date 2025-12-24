@@ -48,7 +48,16 @@ export default function OrderHistory() {
         });
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string, paymentStatus?: string) => {
+        if (paymentStatus) {
+            switch (paymentStatus) {
+                case 'paid': return 'bg-green-50 text-green-700 border-green-200';
+                case 'partially_paid': return 'bg-orange-50 text-orange-700 border-orange-200';
+                case 'unpaid': return 'bg-red-50 text-red-700 border-red-200';
+                default: return 'bg-gray-50 text-gray-700 border-gray-200';
+            }
+        }
+
         switch (status) {
             case 'paid':
             case 'shipped':
@@ -62,21 +71,16 @@ export default function OrderHistory() {
         }
     };
 
-    const getStatusDotColor = (status: string) => {
-        switch (status) {
-            case 'paid':
-            case 'shipped':
-                return 'bg-green-500';
-            case 'pending':
-                return 'bg-yellow-500';
-            case 'cancelled':
-                return 'bg-red-500';
-            default:
-                return 'bg-gray-500';
+    const translateStatus = (status: string, paymentStatus?: string) => {
+        if (paymentStatus) {
+            switch (paymentStatus) {
+                case 'paid': return 'Pago';
+                case 'partially_paid': return 'Seña Pagada';
+                case 'unpaid': return 'No Pago';
+                default: return paymentStatus;
+            }
         }
-    };
 
-    const translateStatus = (status: string) => {
         switch (status) {
             case 'pending': return 'Pendiente';
             case 'paid': return 'Pagado';
@@ -86,7 +90,16 @@ export default function OrderHistory() {
         }
     };
 
-    const getStatusIcon = (status: string) => {
+    const getStatusIcon = (status: string, paymentStatus?: string) => {
+        if (paymentStatus) {
+            switch (paymentStatus) {
+                case 'paid': return 'check_circle';
+                case 'partially_paid': return 'timelapse';
+                case 'unpaid': return 'pending';
+                default: return 'help';
+            }
+        }
+
         switch (status) {
             case 'paid':
             case 'shipped':
@@ -280,9 +293,9 @@ export default function OrderHistory() {
                                         {/* Right Section - Status & Price */}
                                         <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-3">
                                             {/* Status Badge */}
-                                            <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold border ${getStatusColor(order.status)}`}>
-                                                <span className="material-symbols-outlined text-base">{getStatusIcon(order.status)}</span>
-                                                <span>{translateStatus(order.status)}</span>
+                                            <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold border ${getStatusColor(order.status, order.paymentStatus)}`}>
+                                                <span className="material-symbols-outlined text-base">{getStatusIcon(order.status, order.paymentStatus)}</span>
+                                                <span>{translateStatus(order.status, order.paymentStatus)}</span>
                                             </div>
 
                                             {/* Price */}

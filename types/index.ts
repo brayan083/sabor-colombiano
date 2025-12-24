@@ -62,8 +62,12 @@ export interface Order {
     total: number;
     status: 'pending' | 'paid' | 'shipped' | 'cancelled';
     deliveryMethod: 'pickup' | 'delivery';
+    paymentStatus?: 'paid' | 'unpaid' | 'partially_paid';
     shippingAddress?: {
         street: string;
+        number?: string; // Street number
+        floor?: string; // Optional floor
+        apartment?: string; // Optional apartment
         city: string; // Will store Localidad
         state: string; // Keeping for compatibility, or empty
         zip: string;

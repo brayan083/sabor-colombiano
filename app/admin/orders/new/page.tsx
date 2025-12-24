@@ -25,13 +25,18 @@ const NewOrderPage: React.FC = () => {
         street: '',
         city: '',
         zip: '',
+        floor: '',
+        apartment: '',
+        orderNotes: '',
         deliveryMethod: 'delivery', // 'delivery' | 'pickup'
-        deliveryTimeSlot: '' // Time slot preference
+        deliveryTimeSlot: '', // Time slot preference
+        paymentStatus: 'unpaid' // 'unpaid' | 'paid' | 'partially_paid'
     });
 
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     useEffect(() => {
+        // ... (data fetching logic remains same) 
         const fetchProducts = async () => {
             // ... existing fetch logic
             try {
@@ -46,7 +51,7 @@ const NewOrderPage: React.FC = () => {
         fetchProducts();
     }, []);
 
-    // ... existing helper functions ...
+    // ... (helper functions remain same)
     const addToOrder = (product: Product) => {
         // ... existing addToOrder ...
         const existingItem = selectedItems.find(item => item.productId === product.id);
@@ -76,7 +81,7 @@ const NewOrderPage: React.FC = () => {
 
     const calculateTotal = () => selectedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -96,8 +101,10 @@ const NewOrderPage: React.FC = () => {
                 total: calculateTotal(),
                 status: 'pending' as const,
                 paymentMethod: 'cash' as const, // Default for manual orders
+                paymentStatus: formData.paymentStatus as 'paid' | 'unpaid' | 'partially_paid',
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
+                orderNotes: formData.orderNotes,
                 deliveryMethod: formData.deliveryMethod as 'delivery' | 'pickup',
                 deliveryTimeSlot: formData.deliveryTimeSlot,
                 deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
@@ -110,6 +117,8 @@ const NewOrderPage: React.FC = () => {
                     shippingAddress: {
                         street: formData.street,
                         city: formData.city,
+                        floor: formData.floor,
+                        apartment: formData.apartment,
                         state: '',
                         zip: formData.zip
                     }
@@ -224,36 +233,90 @@ const NewOrderPage: React.FC = () => {
                                         <input type="email" name="customerEmail" value={formData.customerEmail} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Delivery Method Toggle */}
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-700">Método de Entrega</label>
-                                <div className="flex gap-4">
-                                    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.deliveryMethod === 'delivery' ? 'bg-primary-admin/5 border-primary-admin' : 'border-gray-200'}`}>
-                                        <input
-                                            type="radio"
-                                            name="deliveryMethod"
-                                            value="delivery"
-                                            checked={formData.deliveryMethod === 'delivery'}
-                                            onChange={handleChange}
-                                            className="text-primary-admin focus:ring-primary-admin"
-                                        />
-                                        <span className="text-sm font-medium text-slate-900">Domicilio</span>
-                                    </label>
-                                    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.deliveryMethod === 'pickup' ? 'bg-primary-admin/5 border-primary-admin' : 'border-gray-200'}`}>
-                                        <input
-                                            type="radio"
-                                            name="deliveryMethod"
-                                            value="pickup"
-                                            checked={formData.deliveryMethod === 'pickup'}
-                                            onChange={handleChange}
-                                            className="text-primary-admin focus:ring-primary-admin"
-                                        />
-                                        <span className="text-sm font-medium text-slate-900">Retiro en Local</span>
-                                    </label>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-slate-700">Notas del Pedido (Opcional)</label>
+                                    <textarea
+                                        name="orderNotes"
+                                        value={formData.orderNotes}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y min-h-[80px]"
+                                        placeholder="Ej: Timbre no funciona, dejar en recepción..."
+                                    />
                                 </div>
                             </div>
+
+                            {/* Delivery Method & Payment Status Grid */}
+                            <div className="flex flex-col gap-4">
+                                {/* Delivery Method */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-slate-700">Método de Entrega</label>
+                                    <div className="flex gap-4">
+                                        <label className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.deliveryMethod === 'delivery' ? 'bg-primary-admin/5 border-primary-admin' : 'border-gray-200'}`}>
+                                            <input
+                                                type="radio"
+                                                name="deliveryMethod"
+                                                value="delivery"
+                                                checked={formData.deliveryMethod === 'delivery'}
+                                                onChange={handleChange}
+                                                className="text-primary-admin focus:ring-primary-admin"
+                                            />
+                                            <span className="text-sm font-medium text-slate-900">Domicilio</span>
+                                        </label>
+                                        <label className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.deliveryMethod === 'pickup' ? 'bg-primary-admin/5 border-primary-admin' : 'border-gray-200'}`}>
+                                            <input
+                                                type="radio"
+                                                name="deliveryMethod"
+                                                value="pickup"
+                                                checked={formData.deliveryMethod === 'pickup'}
+                                                onChange={handleChange}
+                                                className="text-primary-admin focus:ring-primary-admin"
+                                            />
+                                            <span className="text-sm font-medium text-slate-900">Retiro en Local</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Payment Status */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-slate-700">Estado de Pago</label>
+                                    <div className="flex gap-4">
+                                        <label className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.paymentStatus === 'unpaid' ? 'bg-red-50 border-red-500' : 'border-gray-200'}`}>
+                                            <input
+                                                type="radio"
+                                                name="paymentStatus"
+                                                value="unpaid"
+                                                checked={formData.paymentStatus === 'unpaid'}
+                                                onChange={handleChange}
+                                                className="text-red-500 focus:ring-red-500"
+                                            />
+                                            <span className="text-sm font-medium text-slate-900">No Pago</span>
+                                        </label>
+                                        <label className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.paymentStatus === 'partially_paid' ? 'bg-orange-50 border-orange-500' : 'border-gray-200'}`}>
+                                            <input
+                                                type="radio"
+                                                name="paymentStatus"
+                                                value="partially_paid"
+                                                checked={formData.paymentStatus === 'partially_paid'}
+                                                onChange={handleChange}
+                                                className="text-orange-500 focus:ring-orange-500"
+                                            />
+                                            <span className="text-sm font-medium text-slate-900">Seña Pagada</span>
+                                        </label>
+                                        <label className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border cursor-pointer ${formData.paymentStatus === 'paid' ? 'bg-green-50 border-green-500' : 'border-gray-200'}`}>
+                                            <input
+                                                type="radio"
+                                                name="paymentStatus"
+                                                value="paid"
+                                                checked={formData.paymentStatus === 'paid'}
+                                                onChange={handleChange}
+                                                className="text-green-500 focus:ring-green-500"
+                                            />
+                                            <span className="text-sm font-medium text-slate-900">Pago</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             {/* Date Selection */}
                             <div className="space-y-2">
@@ -301,12 +364,22 @@ const NewOrderPage: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1">
+                                            <label className="text-xs font-medium text-slate-700">Piso (Opcional)</label>
+                                            <input type="text" name="floor" value={formData.floor} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ej: 4" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-medium text-slate-700">Depto (Opcional)</label>
+                                            <input type="text" name="apartment" value={formData.apartment} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ej: C" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
                                             <label className="text-xs font-medium text-slate-700">Localidad</label>
                                             <input type="text" name="city" value={formData.city} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ej: Palermo, Recoleta" />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-xs font-medium text-slate-700">Código Postal</label>
-                                            <input type="text" name="zip" value={formData.zip} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                                            <label className="text-xs font-medium text-slate-700">Código Postal (Opcional)</label>
+                                            <input type="text" name="zip" value={formData.zip} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                                         </div>
                                     </div>
                                 </div>
@@ -329,3 +402,6 @@ const NewOrderPage: React.FC = () => {
 };
 
 export default NewOrderPage;
+
+
+

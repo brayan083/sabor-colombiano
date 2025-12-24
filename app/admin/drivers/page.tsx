@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/types';
-import { getDrivers, updateDriverStatus, deleteDriver } from '@/lib/services/drivers';
+import { getDrivers, deleteDriver } from '@/lib/services/drivers';
 import DriverStatusBadge from '@/components/admin/DriverStatusBadge';
 
 const DriversPage = () => {
@@ -29,15 +29,7 @@ const DriversPage = () => {
         }
     };
 
-    const handleStatusChange = async (driverId: string, newStatus: 'available' | 'busy' | 'offline') => {
-        try {
-            await updateDriverStatus(driverId, newStatus);
-            await loadDrivers();
-        } catch (error) {
-            console.error('Error updating driver status:', error);
-            alert('Error al actualizar el estado del repartidor');
-        }
-    };
+
 
     const handleDeleteDriver = async (driverId: string, driverName: string) => {
         if (confirm(`¿Estás seguro de eliminar a ${driverName}?`)) {
@@ -243,39 +235,7 @@ const DriversPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Status Change */}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleStatusChange(driver.uid, 'available')}
-                                        disabled={driver.driverInfo?.status === 'available'}
-                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${driver.driverInfo?.status === 'available'
-                                            ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700'
-                                            }`}
-                                    >
-                                        Disponible
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusChange(driver.uid, 'busy')}
-                                        disabled={driver.driverInfo?.status === 'busy'}
-                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${driver.driverInfo?.status === 'busy'
-                                            ? 'bg-yellow-100 text-yellow-800 cursor-not-allowed'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-yellow-50 hover:text-yellow-700'
-                                            }`}
-                                    >
-                                        Ocupado
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusChange(driver.uid, 'offline')}
-                                        disabled={driver.driverInfo?.status === 'offline'}
-                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${driver.driverInfo?.status === 'offline'
-                                            ? 'bg-gray-100 text-gray-800 cursor-not-allowed'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            }`}
-                                    >
-                                        Offline
-                                    </button>
-                                </div>
+
                             </div>
                         ))}
                     </div>

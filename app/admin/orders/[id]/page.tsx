@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { getOrderById, updateOrderStatus, updateDeliveryStatus, assignDriverToOrder, unassignDriverFromOrder } from '@/lib/services/orders';
+import { getOrderById, updateOrderStatus, updateOrderPaymentStatus, updateDeliveryStatus, assignDriverToOrder, unassignDriverFromOrder } from '@/lib/services/orders';
 import { getDriverById } from '@/lib/services/drivers';
 import { Order, User } from '@/types';
 import DriverSelector from '@/components/admin/DriverSelector';
@@ -41,12 +41,12 @@ const OrderDetailPage: React.FC = () => {
         }
     };
 
-    const handleStatusChange = async (newStatus: Order['status']) => {
-        if (!order) return;
+    const handlePaymentStatusChange = async (newStatus: Order['paymentStatus']) => {
+        if (!order || !newStatus) return;
         setUpdating(true);
         try {
-            await updateOrderStatus(order.id, newStatus);
-            setOrder({ ...order, status: newStatus });
+            await updateOrderPaymentStatus(order.id, newStatus);
+            setOrder({ ...order, paymentStatus: newStatus });
         } catch (error) {
             console.error("Error updating status:", error);
             alert("Error al actualizar el estado");
@@ -139,6 +139,32 @@ const OrderDetailPage: React.FC = () => {
     if (loading) return <div className="p-8 text-center bg-transparent">Cargando pedido...</div>;
     if (!order) return <div className="p-8 text-center">Pedido no encontrado</div>;
 
+    // Determine current display status
+    const currentPaymentStatus = order.paymentStatus || (
+        order.status === 'paid' ? 'paid' :
+            order.status === 'pending' ? 'unpaid' : 'unpaid'
+    );
+
+    const getPaymentStatusColor = (status: string) => {
+        switch (status) {
+            case 'paid': return { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' };
+            case 'partially_paid': return { bg: 'bg-orange-100', text: 'text-orange-800', dot: 'bg-orange-500' };
+            case 'unpaid': return { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' };
+            default: return { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500' };
+        }
+    };
+
+    const getPaymentStatusLabel = (status: string) => {
+        switch (status) {
+            case 'paid': return 'Pagado';
+            case 'partially_paid': return 'Seña Pagada';
+            case 'unpaid': return 'No Pago';
+            default: return 'Desconocido';
+        }
+    };
+
+    const statusStyle = getPaymentStatusColor(currentPaymentStatus);
+
     return (
         <div className="flex flex-col gap-8 max-w-6xl mx-auto">
             <div className="flex flex-wrap justify-between items-center gap-4">
@@ -149,34 +175,32 @@ const OrderDetailPage: React.FC = () => {
                     <div>
                         <p className="text-slate-900 text-2xl font-bold">Pedido #{order.id.slice(0, 8)}</p>
                         <p className="text-slate-500 text-sm">{new Date(order.createdAt).toLocaleString()}</p>
-                        <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium w-fit ${order.status === 'paid' || order.status === 'shipped' ? 'bg-green-100 text-green-800' :
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                            }`}>
-                            <span className={`size-2 rounded-full ${order.status === 'paid' || order.status === 'shipped' ? 'bg-green-500' :
-                                order.status === 'pending' ? 'bg-yellow-500' :
-                                    'bg-red-500'
-                                }`}></span>
-                            Status: {
-                                order.status === 'pending' ? 'Pendiente' :
-                                    order.status === 'paid' ? 'Pagado' :
-                                        order.status === 'shipped' ? 'Enviado' : 'Cancelado'
-                            }
+                        <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium w-fit ${statusStyle.bg} ${statusStyle.text}`}>
+                            <span className={`size-2 rounded-full ${statusStyle.dot}`}></span>
+                            Status: {getPaymentStatusLabel(currentPaymentStatus)}
                         </div>
                     </div>
                 </div>
                 <div className="flex gap-2 items-center bg-white p-2 rounded-lg shadow-sm border border-gray-200">
-                    <span className="text-sm font-medium text-slate-700 ml-2">Estado:</span>
+                    <span className="text-sm font-medium text-slate-700 ml-2">Estado de Pago:</span>
                     <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(e.target.value as Order['status'])}
+                        value={currentPaymentStatus}
+                        onChange={(e) => handlePaymentStatusChange(e.target.value as Order['paymentStatus'])}
                         disabled={updating}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-admin focus:border-primary-admin block p-2.5"
+                        className={`appearance-none text-sm font-medium rounded-lg border-none focus:ring-0 cursor-pointer py-2 pl-3 pr-10 ${currentPaymentStatus === 'paid' ? 'text-green-600 bg-green-50' :
+                            currentPaymentStatus === 'partially_paid' ? 'text-orange-600 bg-orange-50' :
+                                'text-red-600 bg-red-50'
+                            }`}
+                        style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundPosition: 'right 0.5rem center',
+                            backgroundSize: '1.5em 1.5em',
+                            backgroundRepeat: 'no-repeat'
+                        }}
                     >
-                        <option value="pending">Pendiente</option>
-                        <option value="paid">Pagado</option>
-                        <option value="shipped">Enviado</option>
-                        <option value="cancelled">Cancelado</option>
+                        <option value="unpaid" className="text-red-600 bg-white">No Pago</option>
+                        <option value="partially_paid" className="text-orange-600 bg-white">Seña Pagada</option>
+                        <option value="paid" className="text-green-600 bg-white">Pago</option>
                     </select>
                 </div>
             </div>
@@ -229,7 +253,29 @@ const OrderDetailPage: React.FC = () => {
                             </h3>
                         </div>
                         <div className="p-4">
-                            {assignedDriver ? (
+                            {order.deliveryMethod === 'pickup' ? (
+                                <div className="text-center py-6">
+                                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-3">storefront</span>
+                                    <p className="text-slate-900 font-medium mb-1">Retira en Local</p>
+                                    <p className="text-sm text-gray-500 mb-4">Este pedido es para retirar, no requiere repartidor.</p>
+
+                                    <div className="flex items-center justify-center gap-2">
+                                        <label className="text-sm font-medium text-slate-700">Estado:</label>
+                                        <select
+                                            value={order.deliveryStatus === 'delivered' ? 'delivered' : 'pending'}
+                                            onChange={(e) => handleDeliveryStatusChange(e.target.value as Order['deliveryStatus'])}
+                                            disabled={updating}
+                                            className={`text-sm rounded-lg border-gray-300 focus:ring-primary-admin focus:border-primary-admin py-1.5 px-3 ${order.deliveryStatus === 'delivered'
+                                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                                    : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                }`}
+                                        >
+                                            <option value="pending">Pendiente de retiro</option>
+                                            <option value="delivered">Retirado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            ) : assignedDriver ? (
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <div className="text-3xl">

@@ -95,6 +95,16 @@ export const updateOrderStatus = async (id: string, status: Order['status']): Pr
     }
 };
 
+export const updateOrderPaymentStatus = async (id: string, status: Order['paymentStatus']): Promise<void> => {
+    try {
+        const docRef = doc(db, COLLECTION_NAME, id);
+        await updateDoc(docRef, { paymentStatus: status });
+    } catch (error) {
+        console.error("Error updating order payment status:", error);
+        throw error;
+    }
+};
+
 export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
     try {
         const q = query(
@@ -191,19 +201,16 @@ export const updateDeliveryStatus = async (
 // Get orders by driver
 export const getOrdersByDriver = async (driverId: string): Promise<Order[]> => {
     try {
-        console.log('getOrdersByDriver called with driverId:', driverId);
         const q = query(
             collection(db, COLLECTION_NAME),
             where("assignedDriverId", "==", driverId),
             orderBy("createdAt", "desc")
         );
         const querySnapshot = await getDocs(q);
-        const orders = querySnapshot.docs.map(doc => ({
+        return querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         } as Order));
-        console.log('Found orders for driver:', orders.length, orders);
-        return orders;
     } catch (error) {
         console.error("Error fetching orders by driver:", error);
         return [];

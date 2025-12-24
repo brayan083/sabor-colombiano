@@ -7,12 +7,13 @@ import { getOrdersByDriver, updateDeliveryStatus } from '@/lib/services/orders';
 import { updateDriverStatus } from '@/lib/services/drivers';
 import DriverOrderCard from '@/components/driver/DriverOrderCard';
 import DriverStatusBadge from '@/components/admin/DriverStatusBadge';
+import DeliveryMap from '@/components/driver/DeliveryMap';
 
 const DriverDashboard = () => {
     const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('active');
+    const [filter, setFilter] = useState<'active' | 'completed'>('active');
     const [changingStatus, setChangingStatus] = useState(false);
 
     useEffect(() => {
@@ -63,10 +64,8 @@ const DriverDashboard = () => {
         if (filter === 'active') {
             return order.deliveryStatus !== 'delivered' && order.deliveryStatus !== 'failed';
         }
-        if (filter === 'completed') {
-            return order.deliveryStatus === 'delivered' || order.deliveryStatus === 'failed';
-        }
-        return true;
+        // completed
+        return order.deliveryStatus === 'delivered' || order.deliveryStatus === 'failed';
     });
 
     const stats = {
@@ -79,22 +78,23 @@ const DriverDashboard = () => {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 sm:mb-8">
+                    {/* Header - Stack on mobile, side by side on desktop */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">
                                 👋 Hola, {user.displayName}
                             </h1>
-                            <p className="text-gray-600">Panel de Repartidor</p>
+                            <p className="text-sm sm:text-base text-gray-600">Panel de Repartidor</p>
                         </div>
 
-                        {/* Status Selector */}
-                        <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <div className="text-sm text-gray-600 mb-1">Tu estado:</div>
+                        {/* Status Selector - Compact on mobile */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex flex-col sm:text-right">
+                                <div className="text-xs sm:text-sm text-gray-600 mb-1">Tu estado:</div>
                                 <DriverStatusBadge status={user.driverInfo?.status || 'offline'} size="lg" />
                             </div>
                             <div className="relative group">
@@ -130,77 +130,67 @@ const DriverDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-5 rounded-xl border border-gray-200">
+                    {/* Stats Cards - 3 cards total */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-blue-600">local_shipping</span>
                                 </div>
-                                <div>
-                                    <div className="text-sm text-gray-600">Total Entregas</div>
-                                    <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+                                <div className="min-w-0">
+                                    <div className="text-xs sm:text-sm text-gray-600 truncate">Total Entregas</div>
+                                    <div className="text-xl sm:text-2xl font-bold text-slate-900">{stats.total}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 rounded-xl border border-gray-200">
+                        <div className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-green-600">today</span>
                                 </div>
-                                <div>
-                                    <div className="text-sm text-gray-600">Hoy</div>
-                                    <div className="text-2xl font-bold text-green-600">{stats.today}</div>
+                                <div className="min-w-0">
+                                    <div className="text-xs sm:text-sm text-gray-600 truncate">Hoy</div>
+                                    <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.today}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 rounded-xl border border-gray-200">
+                        <div className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-shadow col-span-2 sm:col-span-1">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-yellow-600">star</span>
-                                </div>
-                                <div>
-                                    <div className="text-sm text-gray-600">Calificación</div>
-                                    <div className="text-2xl font-bold text-yellow-600">
-                                        {stats.rating > 0 ? stats.rating.toFixed(1) : 'N/A'}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white p-5 rounded-xl border border-gray-200">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <span className="material-symbols-outlined text-purple-600">pending_actions</span>
                                 </div>
-                                <div>
-                                    <div className="text-sm text-gray-600">Activas</div>
-                                    <div className="text-2xl font-bold text-purple-600">{stats.active}</div>
+                                <div className="min-w-0">
+                                    <div className="text-xs sm:text-sm text-gray-600 truncate">Activas</div>
+                                    <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.active}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Orders Section */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-slate-900">Mis Entregas</h2>
+                {/* Delivery Map */}
+                <DeliveryMap orders={filteredOrders} />
 
-                        {/* Filters */}
-                        <div className="flex gap-2">
-                            {(['all', 'active', 'completed'] as const).map((f) => (
+                {/* Orders Section */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                    {/* Header with filters - Stack on mobile */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">Mis Entregas</h2>
+
+                        {/* Filters - Full width on mobile */}
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            {(['active', 'completed'] as const).map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === f
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${filter === f
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
-                                    {f === 'all' ? 'Todas' : f === 'active' ? 'Activas' : 'Completadas'}
+                                    {f === 'active' ? 'Activas' : 'Entregadas'}
                                 </button>
                             ))}
                         </div>
@@ -219,9 +209,7 @@ const DriverDashboard = () => {
                             <p className="text-gray-500">
                                 {filter === 'active'
                                     ? 'No tienes entregas activas'
-                                    : filter === 'completed'
-                                        ? 'No tienes entregas completadas'
-                                        : 'No tienes entregas asignadas'}
+                                    : 'No tienes entregas completadas'}
                             </p>
                         </div>
                     ) : (

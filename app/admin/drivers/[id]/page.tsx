@@ -31,14 +31,10 @@ const DriverDetailPage = () => {
     const loadDriverData = async () => {
         setLoading(true);
         try {
-            console.log('Loading driver with ID:', driverId);
             const [driverData, ordersData] = await Promise.all([
                 getDriverById(driverId),
                 getOrdersByDriver(driverId)
             ]);
-
-            console.log('Driver data:', driverData);
-            console.log('Orders data:', ordersData);
 
             if (driverData) {
                 setDriver(driverData);

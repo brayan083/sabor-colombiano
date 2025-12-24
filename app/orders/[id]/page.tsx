@@ -71,7 +71,16 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         }
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string, paymentStatus?: string) => {
+        if (paymentStatus) {
+            switch (paymentStatus) {
+                case 'paid': return 'bg-green-100 text-green-800';
+                case 'partially_paid': return 'bg-orange-100 text-orange-800';
+                case 'unpaid': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
         switch (status) {
             case 'paid':
             case 'shipped': return 'bg-green-100 text-green-800';
@@ -81,7 +90,16 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         }
     };
 
-    const translateStatus = (status: string) => {
+    const translateStatus = (status: string, paymentStatus?: string) => {
+        if (paymentStatus) {
+            switch (paymentStatus) {
+                case 'paid': return 'Pago';
+                case 'partially_paid': return 'Seña Pagada';
+                case 'unpaid': return 'No Pago';
+                default: return paymentStatus;
+            }
+        }
+
         switch (status) {
             case 'pending': return 'Pendiente';
             case 'paid': return 'Pagado';
@@ -150,8 +168,8 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                         <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold">No. Pedido</span>
                         <span className="font-bold text-slate-900 text-lg">#{order.id.slice(0, 8).toUpperCase()}</span>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(order.status)}`}>
-                        {translateStatus(order.status)}
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(order.status, order.paymentStatus)}`}>
+                        {translateStatus(order.status, order.paymentStatus)}
                     </div>
                 </div>
 

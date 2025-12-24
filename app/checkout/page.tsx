@@ -28,6 +28,8 @@ export default function CheckoutPage() {
         address: '',
         locality: '',
         postalCode: '',
+        floor: '',
+        apartment: '',
         orderNotes: '',
         deliveryTimeSlot: '',
         paymentMethod: 'mercado_pago' as 'mercado_pago' | 'transfer' | 'cash',
@@ -196,6 +198,8 @@ export default function CheckoutPage() {
                     shippingAddress: {
                         street: formData.address,
                         city: formData.locality,
+                        floor: formData.floor,
+                        apartment: formData.apartment,
                         state: '',
                         zip: formData.postalCode
                     }
@@ -444,6 +448,29 @@ export default function CheckoutPage() {
                                             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                             placeholder="Calle 123 #45-67"
                                             required={formData.deliveryMethod === 'delivery'}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Piso (Opcional)</label>
+                                        <input
+                                            type="text"
+                                            name="floor"
+                                            value={formData.floor}
+                                            onChange={handleInputChange}
+                                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                            placeholder="Ej: 4"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Depto (Opcional)</label>
+                                        <input
+                                            type="text"
+                                            name="apartment"
+                                            value={formData.apartment}
+                                            onChange={handleInputChange}
+                                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                            placeholder="Ej: C"
                                         />
                                     </div>
 
