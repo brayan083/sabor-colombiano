@@ -1,18 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { getProducts } from '@/lib/services/products';
 import { getCategories } from '@/lib/services/categories';
 import { Product, Category } from '@/types';
 import AddToCart from '@/components/AddToCart';
 
-const Catalog: React.FC = () => {
+const CatalogContent: React.FC = () => {
+    const searchParams = useSearchParams();
+    const categoryFromUrl = searchParams.get('category');
+
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryFromUrl);
+
+    useEffect(() => {
+        if (categoryFromUrl) {
+            setSelectedCategory(categoryFromUrl);
+        }
+    }, [categoryFromUrl]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -233,4 +243,10 @@ const Catalog: React.FC = () => {
     );
 };
 
-export default Catalog;
+export default function Catalog() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div></div>}>
+            <CatalogContent />
+        </Suspense>
+    );
+}

@@ -13,7 +13,7 @@ const UserDetailsPage: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [role, setRole] = useState<'admin' | 'customer'>('customer');
+    const [role, setRole] = useState<'admin' | 'customer' | 'driver'>('customer');
     const [updating, setUpdating] = useState(false);
 
     useEffect(() => {
@@ -27,7 +27,7 @@ const UserDetailsPage: React.FC = () => {
 
                 if (userData) {
                     setUser(userData);
-                    setRole(userData.role);
+                    setRole(userData.role || 'customer');
                 }
                 setOrders(ordersData);
             } catch (error) {
@@ -93,15 +93,16 @@ const UserDetailsPage: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-500 mb-1">Rol</label>
                                 <div className="flex gap-2">
-                                    <select 
-                                        value={role} 
-                                        onChange={(e) => setRole(e.target.value as 'admin' | 'customer')}
+                                    <select
+                                        value={role}
+                                        onChange={(e) => setRole(e.target.value as 'admin' | 'customer' | 'driver')}
                                         className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                                     >
                                         <option value="customer">Cliente</option>
                                         <option value="admin">Administrador</option>
+                                        <option value="driver">Repartidor</option>
                                     </select>
-                                    <button 
+                                    <button
                                         onClick={handleRoleChange}
                                         disabled={role === user.role || updating}
                                         className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
@@ -110,12 +111,12 @@ const UserDetailsPage: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <p className="text-sm font-medium text-slate-500 mb-1">ID</p>
                                 <p className="text-sm font-mono bg-gray-50 p-2 rounded border border-gray-100 truncate">{user.uid}</p>
                             </div>
-                            
+
                             <div>
                                 <p className="text-sm font-medium text-slate-500 mb-1">Teléfono</p>
                                 <p className="text-slate-900">{user.phoneNumber || 'No registrado'}</p>
@@ -133,7 +134,7 @@ const UserDetailsPage: React.FC = () => {
                 <div className="lg:col-span-2">
                     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <h3 className="text-lg font-bold text-slate-900 mb-4">Historial de Pedidos ({orders.length})</h3>
-                        
+
                         {orders.length === 0 ? (
                             <p className="text-slate-500 text-center py-8">Este usuario no ha realizado pedidos.</p>
                         ) : (
@@ -145,11 +146,10 @@ const UserDetailsPage: React.FC = () => {
                                                 <p className="font-bold text-slate-900">Pedido #{order.id.slice(-6)}</p>
                                                 <p className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleDateString()} • {new Date(order.createdAt).toLocaleTimeString()}</p>
                                             </div>
-                                            <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${
-                                                order.status === 'paid' ? 'bg-green-100 text-green-700' :
-                                                order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-gray-100 text-gray-700'
-                                            }`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-bold capitalize ${order.status === 'paid' ? 'bg-green-100 text-green-700' :
+                                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-gray-100 text-gray-700'
+                                                }`}>
                                                 {order.status === 'paid' ? 'Pagado' : order.status === 'pending' ? 'Pendiente' : order.status}
                                             </span>
                                         </div>

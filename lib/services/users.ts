@@ -96,7 +96,7 @@ export const getUserById = async (uid: string): Promise<User | null> => {
     }
 };
 
-export const updateUserRole = async (uid: string, role: 'admin' | 'customer'): Promise<void> => {
+export const updateUserRole = async (uid: string, role: 'admin' | 'customer' | 'driver'): Promise<void> => {
     try {
         const userRef = doc(db, COLLECTION_NAME, uid);
         await updateDoc(userRef, { role });

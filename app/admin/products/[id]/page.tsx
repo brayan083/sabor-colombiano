@@ -42,7 +42,7 @@ const EditProductPage: React.FC = () => {
                         description: productData.description,
                         price: productData.price.toString(),
                         stock: productData.stock.toString(),
-                        categoryId: productData.categoryId,
+                        categoryId: productData.categoryId || '',
                         image: productData.image,
                         inStock: productData.inStock
                     });
