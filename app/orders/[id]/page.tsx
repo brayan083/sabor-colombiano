@@ -227,6 +227,22 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                                 <span className="font-bold text-slate-900">${(item.price * item.quantity).toLocaleString()}</span>
                             </div>
                         ))}
+                        {order.shippingCost && order.shippingCost > 0 && (
+                            <div className="flex justify-between items-center py-2 border-b border-gray-100 hover:bg-slate-50 transition-colors p-2 rounded">
+                                <div className="flex items-center gap-4">
+                                    <div className="size-12 rounded-md overflow-hidden relative flex items-center justify-center bg-blue-50 text-blue-500">
+                                        <span className="material-symbols-outlined">local_shipping</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-sm">
+                                            Envío
+                                            {order.shippingZone && <span className="text-xs font-normal text-slate-400 ml-1">({order.shippingZone === 'centro' ? 'Centro' : 'Bordes'})</span>}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className="font-bold text-slate-900">${order.shippingCost.toLocaleString()}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -282,7 +298,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                     <span className="material-symbols-outlined text-blue-600">info</span>
                     <div>
                         <p className="font-bold text-blue-900 text-sm">Recuerda enviar tu comprobante</p>
-                        <p className="text-sm text-blue-800 mt-1">Si pagaste por transferencia, envía el comprobante al WhatsApp +57 300 123 4567 indicando tu número de pedido #{order.id.slice(0, 6)}.</p>
+                        <p className="text-sm text-blue-800 mt-1">Si pagaste por transferencia, envía el comprobante al WhatsApp +54 11-7363-8905 indicando tu número de pedido #{order.id.slice(0, 6)}.</p>
                     </div>
                 </div>
             )}

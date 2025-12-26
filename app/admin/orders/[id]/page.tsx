@@ -235,6 +235,15 @@ const OrderDetailPage: React.FC = () => {
                                 </div>
                             ))}
                         </div>
+                        {order.shippingCost && order.shippingCost > 0 && (
+                            <div className="p-4 flex justify-between items-center border-t border-gray-200">
+                                <span className="font-medium text-slate-700">
+                                    Envío
+                                    {order.shippingZone && <span className="text-xs text-slate-400 ml-1">({order.shippingZone === 'centro' ? 'Centro' : 'Bordes'})</span>}
+                                </span>
+                                <span className="font-bold text-slate-900">${order.shippingCost.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div className="p-4 bg-gray-50 flex justify-between items-center border-t border-gray-200">
                             <span className="font-medium text-slate-700">Total</span>
                             <span className="text-xl font-black text-slate-900">${order.total.toFixed(2)}</span>
@@ -266,8 +275,8 @@ const OrderDetailPage: React.FC = () => {
                                             onChange={(e) => handleDeliveryStatusChange(e.target.value as Order['deliveryStatus'])}
                                             disabled={updating}
                                             className={`text-sm rounded-lg border-gray-300 focus:ring-primary-admin focus:border-primary-admin py-1.5 px-3 ${order.deliveryStatus === 'delivered'
-                                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                                    : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                                ? 'bg-green-50 text-green-700 border-green-200'
+                                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
                                                 }`}
                                         >
                                             <option value="pending">Pendiente de retiro</option>

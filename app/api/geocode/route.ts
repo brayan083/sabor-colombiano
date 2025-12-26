@@ -27,13 +27,14 @@ export async function GET(request: NextRequest) {
         const data = await response.json();
 
         if (data.status === 'OK' && data.results.length > 0) {
-            const location = data.results[0].geometry.location;
+            const result = data.results[0];
             return NextResponse.json({
                 success: true,
                 coordinates: {
-                    lat: location.lat,
-                    lng: location.lng
-                }
+                    lat: result.geometry.location.lat,
+                    lng: result.geometry.location.lng
+                },
+                addressComponents: result.address_components
             });
         }
 

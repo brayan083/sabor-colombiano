@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getProducts } from '@/lib/services/products';
 import { createOrder } from '@/lib/services/orders';
+import { calculateShippingZone } from '@/lib/services/geocoding'; // Import geocoding service
 import { Product, OrderItem } from '@/types';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -16,6 +17,7 @@ const NewOrderPage: React.FC = () => {
     const [selectedItems, setSelectedItems] = useState<OrderItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [calculatingShipping, setCalculatingShipping] = useState(false); // Add loading state
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -30,10 +32,42 @@ const NewOrderPage: React.FC = () => {
         orderNotes: '',
         deliveryMethod: 'delivery', // 'delivery' | 'pickup'
         deliveryTimeSlot: '', // Time slot preference
-        paymentStatus: 'unpaid' // 'unpaid' | 'paid' | 'partially_paid'
+        paymentStatus: 'unpaid', // 'unpaid' | 'paid' | 'partially_paid'
+        shippingZone: '' // 'centro' | 'bordes'
     });
 
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+    useEffect(() => {
+        // Auto-calculate shipping when address changes
+        const timer = setTimeout(async () => {
+            if (formData.deliveryMethod === 'delivery' && formData.street) {
+                setCalculatingShipping(true);
+                // Use provided city or default to Buenos Aires for search
+                const searchCity = formData.city || 'Buenos Aires';
+                const address = `${formData.street} ${formData.floor ? `Piso ${formData.floor}` : ''} ${formData.apartment ? `Depto ${formData.apartment}` : ''}, ${searchCity}, Argentina`;
+
+                const result = await calculateShippingZone(address);
+
+                if (result) {
+                    setFormData(prev => ({
+                        ...prev,
+                        shippingZone: result.zone || '',
+                        // Prioritize neighborhood (barrio) for locality/city field
+                        city: result.neighborhood || result.city || prev.city,
+                        zip: result.zip || prev.zip
+                    }));
+                } else {
+                    setFormData(prev => ({ ...prev, shippingZone: '' }));
+                }
+                setCalculatingShipping(false);
+            } else if (formData.deliveryMethod !== 'delivery') {
+                setFormData(prev => ({ ...prev, shippingZone: '' }));
+            }
+        }, 1500); // 1.5s debounce
+
+        return () => clearTimeout(timer);
+    }, [formData.street, formData.city, formData.floor, formData.apartment, formData.deliveryMethod]);
 
     useEffect(() => {
         // ... (data fetching logic remains same) 
@@ -111,9 +145,20 @@ const NewOrderPage: React.FC = () => {
                 createdAt: Date.now()
             };
 
+            // Calculate shipping logic
+            let shippingCost = 0;
+            if (formData.deliveryMethod === 'delivery') {
+                if (formData.shippingZone === 'centro') shippingCost = 5000;
+                else if (formData.shippingZone === 'bordes') shippingCost = 9000;
+            }
+
+            baseOrder.total += shippingCost;
+
             const newOrder = formData.deliveryMethod === 'delivery'
                 ? {
                     ...baseOrder,
+                    shippingCost,
+                    shippingZone: formData.shippingZone,
                     shippingAddress: {
                         street: formData.street,
                         city: formData.city,
@@ -357,7 +402,45 @@ const NewOrderPage: React.FC = () => {
 
                             {/* Address Fields (Conditional) */}
                             {formData.deliveryMethod === 'delivery' && (
-                                <div className="space-y-4 pt-2 border-t border-gray-100">
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-medium text-slate-700">Costo de Envío</label>
+                                            {calculatingShipping && (
+                                                <div className="flex items-center gap-2 text-xs text-primary-admin animate-pulse">
+                                                    <span className="material-symbols-outlined text-sm">calculate</span>
+                                                    Calculando...
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {formData.shippingZone ? (
+                                            <div className="flex items-center justify-between p-3 rounded-lg bg-primary-admin/5 border border-primary-admin/20 animate-in fade-in zoom-in duration-300">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="bg-white p-1.5 rounded-md border border-gray-100 shadow-sm">
+                                                        <span className="material-symbols-outlined text-primary-admin text-[20px]">local_shipping</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-slate-900 text-sm">
+                                                            {formData.shippingZone === 'centro' ? 'Capital (Centro)' : 'Capital (Bordes)'}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500">
+                                                            Zona calculada automáticamente
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="font-black text-slate-900">
+                                                    {formData.shippingZone === 'centro' ? '$5.000' : '$9.000'}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-slate-500 text-center flex items-center justify-center gap-2">
+                                                <span className="material-symbols-outlined text-gray-400 text-[18px]">home_pin</span>
+                                                Ingresa la dirección para calcular costo
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="space-y-1">
                                         <label className="text-xs font-medium text-slate-700">Dirección</label>
                                         <input type="text" name="street" value={formData.street} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />

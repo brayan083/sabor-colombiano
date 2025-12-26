@@ -13,6 +13,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import { formatPrice } from '@/lib/utils';
+import { calculateShippingZone } from '@/lib/services/geocoding';
 
 export default function CheckoutPage() {
     const { user, loading: authLoading, refreshUser } = useAuth();
@@ -33,10 +34,12 @@ export default function CheckoutPage() {
         orderNotes: '',
         deliveryTimeSlot: '',
         paymentMethod: 'mercado_pago' as 'mercado_pago' | 'transfer' | 'cash',
-        deliveryMethod: 'delivery' as 'delivery' | 'pickup'
+        deliveryMethod: 'delivery' as 'delivery' | 'pickup',
+        shippingZone: '' // 'centro' | 'bordes'
     });
 
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [calculatingShipping, setCalculatingShipping] = useState(false);
 
     const isOrderPlaced = React.useRef(false);
 
@@ -105,6 +108,39 @@ export default function CheckoutPage() {
         }
     }, [selectedDate, formData.deliveryTimeSlot]);
 
+    // Auto-calculate shipping zone when address changes
+    useEffect(() => {
+        const checkShippingZone = async () => {
+            if (formData.deliveryMethod !== 'delivery') return;
+
+            // Only calculate if we have enough address info (street is required)
+            if (formData.address.length < 5) return;
+
+            // Construct address for geocoding
+            // If locality is present, use it. If not, default to Buenos Aires.
+            const searchLocality = formData.locality || 'Buenos Aires';
+            const fullAddress = `${formData.address}, ${searchLocality}, Argentina`;
+
+            setCalculatingShipping(true);
+            const result = await calculateShippingZone(fullAddress);
+            setCalculatingShipping(false);
+
+            if (result) {
+                setFormData(prev => ({
+                    ...prev,
+                    shippingZone: result.zone || '',
+                    // Auto-fill locality: Prefer neighborhood (barrio), fallback to city
+                    locality: result.neighborhood || result.city || prev.locality,
+                    // Auto-fill postal code
+                    postalCode: result.zip || prev.postalCode
+                }));
+            }
+        };
+
+        const timeoutId = setTimeout(checkShippingZone, 1500); // Debounce 1.5s
+        return () => clearTimeout(timeoutId);
+    }, [formData.address, formData.deliveryMethod, formData.locality]); // Keeping locality in deps to refine search if user types it
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -135,11 +171,22 @@ export default function CheckoutPage() {
         setErrorMessage(null);
 
         try {
-            // Save phone number to user profile if not already saved
-            if (formData.phone && formData.phone !== user.phoneNumber) {
+            if (user && formData.phone && formData.phone !== user.phoneNumber) {
                 await updateUserPhone(user.uid, formData.phone);
                 await refreshUser(); // Update local user state immediately
             }
+
+            // Calculate shipping cost
+            let shippingCost = 0;
+            if (formData.deliveryMethod === 'delivery') {
+                if (formData.shippingZone === 'centro') {
+                    shippingCost = 5000;
+                } else if (formData.shippingZone === 'bordes') {
+                    shippingCost = 9000;
+                }
+            }
+
+            const finalTotal = totalPrice + shippingCost;
 
             if (formData.paymentMethod === 'mercado_pago') {
                 // Call API to create preference
@@ -154,7 +201,9 @@ export default function CheckoutPage() {
                             id: user.uid
                         },
                         deliveryTimeSlot: formData.deliveryTimeSlot,
-                        deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : ''
+                        deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+                        shippingCost: shippingCost,
+                        shippingZone: formData.shippingZone
                     })
                 });
 
@@ -180,7 +229,7 @@ export default function CheckoutPage() {
             const baseOrder = {
                 userId: user.uid,
                 items: orderItems,
-                total: totalPrice,
+                total: finalTotal,
                 status: 'pending' as const,
                 deliveryMethod: formData.deliveryMethod,
                 paymentMethod: formData.paymentMethod,
@@ -189,6 +238,8 @@ export default function CheckoutPage() {
                 orderNotes: formData.orderNotes, // Pass to order creation
                 deliveryTimeSlot: formData.deliveryTimeSlot,
                 deliveryDate: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+                shippingCost: shippingCost,
+                shippingZone: formData.deliveryMethod === 'delivery' ? formData.shippingZone : undefined,
                 createdAt: Date.now()
             };
 
@@ -308,8 +359,15 @@ export default function CheckoutPage() {
                                         minDate={new Date()}
                                         dateFormat="dd/MM/yyyy"
                                         placeholderText="Selecciona una fecha"
-                                        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                        className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all caret-transparent"
                                         wrapperClassName="w-full"
+                                        onKeyDown={(e) => {
+                                            if (e.key !== 'Tab') {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                        readOnly
+                                        autoComplete="off"
                                     />
                                     <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
                                         calendar_today
@@ -411,7 +469,7 @@ export default function CheckoutPage() {
                                         value={formData.phone}
                                         onChange={handleInputChange}
                                         className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                        placeholder="Ej: 300 123 4567"
+                                        placeholder="Ej: 11 1234 5678"
                                         required
                                     />
                                 </div>
@@ -499,6 +557,43 @@ export default function CheckoutPage() {
                                         />
                                     </div>
                                 </div>
+                                <div className="pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <label className="block text-sm font-medium text-slate-700">Costo de Envío</label>
+                                        {calculatingShipping && (
+                                            <div className="flex items-center gap-2 text-xs text-primary animate-pulse">
+                                                <span className="material-symbols-outlined text-sm">calculate</span>
+                                                Calculando...
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {formData.shippingZone ? (
+                                        <div className="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/20 animate-in fade-in zoom-in duration-300">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                                                    <span className="material-symbols-outlined text-primary">local_shipping</span>
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-slate-900">
+                                                        {formData.shippingZone === 'centro' ? 'Capital (Centro)' : 'Capital (Bordes)'}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        Zona calculada por dirección
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="font-black text-slate-900 text-lg">
+                                                {formData.shippingZone === 'centro' ? '$5.000' : '$9.000'}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-sm text-slate-500 text-center flex items-center justify-center gap-2">
+                                            <span className="material-symbols-outlined text-gray-400">home_pin</span>
+                                            Ingresa tu dirección para calcular el costo de envío
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
@@ -509,7 +604,7 @@ export default function CheckoutPage() {
                                     <span className="material-symbols-outlined text-primary text-3xl">store</span>
                                     <div>
                                         <h3 className="font-bold text-slate-900 text-lg">Retiro en Empalombia</h3>
-                                        <p className="text-slate-600 mt-1">Calle 85 #12-34, Zona T<br />Bogotá, Cundinamarca</p>
+                                        <p className="text-slate-600 mt-1">Eleodoro Lobos 285, Caballito<br />CABA, Argentina</p>
                                         <p className="text-sm text-slate-500 mt-2">Horario: Lunes a Sábado, 11:00 AM - 9:00 PM</p>
                                         <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary bg-white px-3 py-1 rounded-full shadow-sm border border-primary/20">
                                             <span className="material-symbols-outlined text-sm">check</span>
@@ -575,7 +670,7 @@ export default function CheckoutPage() {
                                                 <p>NIT: <span className="font-medium text-slate-900">900.123.456-7</span></p>
                                                 <div className="bg-blue-50 text-blue-800 p-2 rounded mt-2 text-xs flex items-center gap-2">
                                                     <span className="material-symbols-outlined text-base">info</span>
-                                                    Envía el comprobante al WhatsApp +57 300 123 4567
+                                                    Envía el comprobante al WhatsApp +54 11-7363-8905
                                                 </div>
                                             </div>
                                         </div>
@@ -635,7 +730,11 @@ export default function CheckoutPage() {
                             <div className="flex justify-between text-sm text-slate-600">
                                 <span>Entrega</span>
                                 {formData.deliveryMethod === 'delivery' ? (
-                                    <span className="text-green-600 font-bold">Gratis</span>
+                                    <span className="text-slate-900 font-semibold">
+                                        {formData.shippingZone === 'centro' ? '$5.000' :
+                                            formData.shippingZone === 'bordes' ? '$9.000' :
+                                                'Por calcular'}
+                                    </span>
                                 ) : (
                                     <span className="text-slate-900 font-semibold">Retiro en local</span>
                                 )}
@@ -645,7 +744,14 @@ export default function CheckoutPage() {
                         <div className="bg-primary/5 rounded-xl p-4 mb-6 border border-primary/20">
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold text-slate-900">Total</span>
-                                <span className="text-2xl font-black text-primary">{formatPrice(totalPrice)}</span>
+                                <span className="text-2xl font-black text-primary">
+                                    {formatPrice(totalPrice + (
+                                        formData.deliveryMethod === 'delivery' ? (
+                                            formData.shippingZone === 'centro' ? 5000 :
+                                                formData.shippingZone === 'bordes' ? 9000 : 0
+                                        ) : 0
+                                    ))}
+                                </span>
                             </div>
                         </div>
 
@@ -686,7 +792,7 @@ export default function CheckoutPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -72,6 +72,8 @@ export interface Order {
         state: string; // Keeping for compatibility, or empty
         zip: string;
     };
+    shippingCost?: number;
+    shippingZone?: string;
     paymentMethod: 'mercado_pago' | 'transfer' | 'cash';
     customerName: string;
     customerPhone?: string;

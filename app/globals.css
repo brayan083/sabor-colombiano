@@ -4,20 +4,52 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes wiggle {
+
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  
+
   /* Premium Gradients */
   --gradient-primary: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
   --gradient-hero: linear-gradient(135deg, rgba(212, 175, 55, 0.95) 0%, rgba(244, 208, 63, 0.85) 100%);
   --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
   --gradient-promo: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6347 100%);
-  
+
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
-  
+
   /* Shadows */
   --shadow-glow: 0 0 30px rgba(212, 175, 55, 0.3);
   --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -42,6 +74,7 @@ body {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -52,24 +85,31 @@ body {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }
 }
 
 @keyframes glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
   }
@@ -79,9 +119,11 @@ body {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }

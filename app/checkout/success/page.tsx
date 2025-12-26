@@ -157,6 +157,15 @@ function OrderSuccessContent() {
                                             <span className="text-slate-900 font-medium">${(item.price * item.quantity).toLocaleString()}</span>
                                         </div>
                                     ))}
+                                    {order.shippingCost && order.shippingCost > 0 && (
+                                        <div className="flex justify-between text-sm pt-2 border-t border-gray-100 mt-2">
+                                            <span className="text-slate-600">
+                                                Envío
+                                                {order.shippingZone && <span className="text-xs text-slate-400 ml-1">({order.shippingZone === 'centro' ? 'Centro' : 'Bordes'})</span>}
+                                            </span>
+                                            <span className="text-slate-900 font-medium">${order.shippingCost.toLocaleString()}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
